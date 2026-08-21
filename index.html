@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premmarg – Shrimad Bhagwat Kathā Summaries</title>
+  <meta name="description" content="Daily summaries of Shrimad Bhagwat Kathā by Gurudev — in English and Hindi. Immerse in the nectar of Bhagwat Ras.">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function() {
+      var theme = localStorage.getItem('premmarg-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body data-page="home">
+
+<!-- Lotus particles -->
+<div class="page-bg"></div>
+<div class="lotus-particles"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">
+    <img src="uploads/logo.png" alt="GaurMarg" class="nav-logo">
+    <div class="nav-brand-text">
+      <span class="nav-brand-name">Premmarg</span>
+      <span class="nav-brand-hi">प्रेममार्ग</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="kathas.html">All Kathas</a></li>
+    <li><a href="about.html">About Gurudev</a></li>
+    <li>
+      <button id="theme-toggle" class="btn-ghost" style="padding:4px 8px; border:1px solid var(--glass-border); border-radius:50%;" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+    </li>
+  </ul>
+  <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <!-- SVG mandala in hero-mandala div -->
+  <div class="hero-mandala">
+    <svg viewBox="0 0 400 400" fill="none" stroke="#d4872a" stroke-width="0.6" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="200" cy="200" r="190"/>
+      <circle cx="200" cy="200" r="155"/>
+      <circle cx="200" cy="200" r="120"/>
+      <circle cx="200" cy="200" r="90"/>
+      <circle cx="200" cy="200" r="60"/>
+      <!-- 8 petals -->
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(0,200,200)"/>
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(45,200,200)"/>
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(90,200,200)"/>
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(135,200,200)"/>
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(180,200,200)"/>
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(225,200,200)"/>
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(270,200,200)"/>
+      <ellipse cx="200" cy="80" rx="18" ry="40" transform="rotate(315,200,200)"/>
+    </svg>
+  </div>
+
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-badge anim-hero-1">🪷 Daily Katha Summaries</div>
+      <h1 class="hero-title anim-hero-2">
+        Immerse in the<br><em>Bhagwat Ras</em>
+      </h1>
+      <p class="hero-hi anim-hero-3">श्रीमद् भागवत कथा का प्रतिदिन का सारांश</p>
+      <p class="hero-desc anim-hero-3">Daily summaries of Gurudev's Shrimad Bhagwat Kathā — in both English &amp; Hindi — so you can carry the nectar of each day in your heart.</p>
+      <div class="hero-actions anim-hero-4">
+        <a href="kathas.html" class="btn btn-primary">🪷 Read Kathas</a>
+        <a href="about.html" class="btn btn-outline">About Gurudev</a>
+      </div>
+    </div>
+
+    <div class="hero-img-wrap anim-hero-5">
+      <div class="hero-img-ring">
+        <img src="uploads/gurudev.jpg" alt="Gurudev – Shrimad Bhagwat Katha">
+        <div class="hero-img-label">श्री गुरुदेव भगवान</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LATEST SAPTAH STRIP -->
+<div style="max-width:1200px;margin:2rem auto 0.5rem;padding:0 2.5rem;">
+  <div class="latest-saptah-strip reveal" id="latest-saptah-wrap">
+    <div class="strip-header">
+      <div>
+        <div class="section-label" style="text-align:left;justify-content:flex-start;">Current Saptah</div>
+        <h2 class="section-title" id="latest-saptah-title" style="font-size:1.6rem;margin-bottom:0.3rem;">
+          <span class="strip-saptah-title"></span>
+        </h2>
+        <div class="strip-meta">
+          <span class="strip-saptah-loc"></span>
+          <span>·</span>
+          <span class="strip-saptah-year"></span>
+        </div>
+        <p style="font-family:var(--font-hindi);color:var(--saffron);font-size:0.95rem;margin-top:0.3rem;" class="strip-saptah-title-hi"></p>
+      </div>
+      <a href="#" class="btn btn-sm btn-outline strip-saptah-link">View All Days</a>
+    </div>
+    <div class="strip-days" id="strip-days"></div>
+  </div>
+</div>
+
+<hr class="hr-gold">
+
+<!-- DAILY QUOTES (AMRIT VACHAN) -->
+<section class="section section-quotes" style="padding: 4rem 1.4rem 2rem;">
+  <div class="section-header">
+    <div class="section-label">Amrit Vachan · अमृत वचन</div>
+    <h2 class="section-title">Divine Thoughts</h2>
+    <p class="section-desc">Preserving the holy words of Gurudev Bhagwan and sacred scriptures to light up your daily path.</p>
+  </div>
+  
+  <div class="quotes-container">
+    <div class="glass-card quote-card reveal">
+      <div class="quote-symbol quote-open">“</div>
+      <div class="quote-content-wrap">
+        <p class="quote-text-hi font-hindi" id="quote-hi" style="transition: opacity 0.25s;">कमल के समान बनो—संसार के कीचड़ में रहकर भी अपनी पवित्रता और सुगंध को कभी मत खोना।</p>
+        <p class="quote-text-en" id="quote-en" style="transition: opacity 0.25s;">Be like a lotus—even when living in the mud of the world, never lose your purity and fragrance.</p>
+        <div class="quote-source" id="quote-source" style="transition: opacity 0.25s;">— श्री गुरुदेव भगवान (Gurudev Bhagwan)</div>
+      </div>
+      <div class="quote-symbol quote-close">”</div>
+      
+      <button class="btn btn-sm btn-outline quote-next-btn" id="next-quote-btn">
+        दूसरा विचार (Next Quote) &nbsp;➔
+      </button>
+    </div>
+  </div>
+</section>
+
+<hr class="hr-gold">
+
+<!-- FEATURED POSTS -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-label">From the Katha</div>
+    <h2 class="section-title">Featured Summaries</h2>
+    <p class="section-desc">Deep spiritual insights from each day of the Saptah — bilingual, for seekers everywhere.</p>
+  </div>
+  <div id="featured-posts-wrap"></div>
+  <div class="text-center" style="margin-top:2.5rem;">
+    <a href="kathas.html" class="btn btn-outline">View All Posts</a>
+  </div>
+</section>
+
+<hr class="hr-gold">
+
+<!-- ALL SAPTAHS -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-label">Archive</div>
+    <h2 class="section-title">All Kathas</h2>
+    <p class="section-desc">Every Saptah documented — a treasure of spiritual nectar to revisit anytime.</p>
+  </div>
+  <div id="all-saptahs-wrap"></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="uploads/logo.png" alt="GaurMarg" class="footer-brand-logo">
+      <p>Daily summaries of Shrimad Bhagwat Kathā by Gurudev — preserving the divine nectar of each Saptah for seekers everywhere.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="kathas.html">All Kathas</a></li>
+        <li><a href="about.html">About Gurudev</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Recent Saptah</h4>
+      <ul id="footer-saptahs"></ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Premmarg · श्रीराधारमणचरणार्पणमस्तु</span>
+    <span class="footer-om">ॐ</span>
+  </div>
+</footer>
+
+<div id="toast"></div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Populate footer saptahs
+  document.addEventListener('DOMContentLoaded', () => {
+    const ul = document.getElementById('footer-saptahs');
+    if (ul) {
+      ul.innerHTML = Data.getSaptahs().slice(0,4).map(s =>
+        `<li><a href="katha.html?slug=${s.slug}">${s.title} ${s.year}</a></li>`
+      ).join('');
+    }
+  });
+</script>
+</body>
+</html>

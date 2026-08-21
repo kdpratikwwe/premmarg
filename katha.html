@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kathā – Premmarg</title>
+  <meta name="description" content="Explore all seven days of this Shrimad Bhagwat Kathā Saptah with daily summaries.">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function() {
+      var theme = localStorage.getItem('premmarg-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body data-page="katha">
+
+<div class="page-bg"></div>
+<div class="lotus-particles"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">
+    <img src="uploads/logo.png" alt="GaurMarg" class="nav-logo">
+    <div class="nav-brand-text">
+      <span class="nav-brand-name">Premmarg</span>
+      <span class="nav-brand-hi">प्रेममार्ग</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="kathas.html">All Kathas</a></li>
+    <li><a href="about.html">About Gurudev</a></li>
+    <li>
+      <button id="theme-toggle" class="btn-ghost" style="padding:4px 8px; border:1px solid var(--glass-border); border-radius:50%;" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+    </li>
+  </ul>
+  <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Katha Header -->
+<div class="katha-hero">
+  <nav class="katha-breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Home</a>
+    <span>›</span>
+    <a href="kathas.html">All Kathas</a>
+    <span>›</span>
+    <span id="katha-breadcrumb-title" style="color:var(--text-secondary);">Kathā</span>
+  </nav>
+
+  <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:0.4rem;">
+    <span class="tag tag-day" id="katha-year-tag">2026</span>
+    <span class="tag" style="background:rgba(212,135,42,0.1);border-color:rgba(212,135,42,0.25);color:var(--saffron-light);" id="katha-loc-tag">📍 Location</span>
+  </div>
+
+  <h1 class="katha-title" id="katha-title">Shrimad Bhagwat Kathā</h1>
+  <p class="font-hindi" style="color:var(--saffron);font-size:1.1rem;margin-bottom:1rem;" id="katha-title-hi"></p>
+
+  <div class="katha-meta-row">
+    <span class="katha-meta-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span id="katha-location">Location</span>
+    </span>
+    <span class="katha-meta-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span id="katha-year">Year</span>
+    </span>
+    <span class="katha-meta-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      7 Days Saptah
+    </span>
+  </div>
+
+  <p class="katha-desc" id="katha-desc"></p>
+</div>
+
+<!-- Main layout -->
+<div class="katha-layout">
+  <!-- Timeline -->
+  <div>
+    <h2 style="font-family:var(--font-heading);font-size:1.3rem;color:var(--saffron-light);margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Day-wise Journey
+    </h2>
+    <div class="day-timeline" id="timeline-wrap"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="glass-card katha-sidebar-card">
+      <div class="sidebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Recent Posts
+      </div>
+      <div id="sidebar-posts"></div>
+      <a href="kathas.html" class="btn btn-sm btn-outline" style="margin-top:1.5rem;width:100%;justify-content:center;">All Kathas</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="uploads/logo.png" alt="GaurMarg" class="footer-brand-logo">
+      <p>Daily summaries of Shrimad Bhagwat Kathā — preserving the divine nectar of each Saptah.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="kathas.html">All Kathas</a></li>
+        <li><a href="about.html">About Gurudev</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>॥ श्रीराधारमणचरणार्पणमस्तु ॥</h4>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Premmarg · radharamancharanarpanam asthuh 🙏</span>
+    <span class="footer-om">ॐ</span>
+  </div>
+</footer>
+
+<div id="toast"></div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Update breadcrumb and tags after page init
+  document.addEventListener('DOMContentLoaded', () => {
+    const slug = new URLSearchParams(window.location.search).get('slug');
+    if (!slug) return;
+    const s = Data.getSaptah(slug);
+    if (!s) return;
+    const bcTitle = document.getElementById('katha-breadcrumb-title');
+    if (bcTitle) bcTitle.textContent = s.title;
+    const yearTag = document.getElementById('katha-year-tag');
+    if (yearTag) yearTag.textContent = s.year;
+    const locTag = document.getElementById('katha-loc-tag');
+    if (locTag) locTag.textContent = '📍 ' + s.location;
+    document.title = s.title + ' – Premmarg';
+  });
+</script>
+</body>
+</html>

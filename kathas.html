@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Kathas – Premmarg</title>
+  <meta name="description" content="Browse all Shrimad Bhagwat Kathā and Saptah archives by Gurudev — spiritual summaries in English and Hindi.">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function() {
+      var theme = localStorage.getItem('premmarg-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body data-page="kathas">
+
+<div class="page-bg"></div>
+<div class="lotus-particles"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">
+    <img src="uploads/logo.png" alt="GaurMarg" class="nav-logo">
+    <div class="nav-brand-text">
+      <span class="nav-brand-name">Premmarg</span>
+      <span class="nav-brand-hi">प्रेममार्ग</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="kathas.html">All Kathas</a></li>
+    <li><a href="about.html">About Gurudev</a></li>
+    <li>
+      <button id="theme-toggle" class="btn-ghost" style="padding:4px 8px; border:1px solid var(--glass-border); border-radius:50%;" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+    </li>
+  </ul>
+  <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="page-banner">
+  <div class="page-banner-om">॥ श्री हरिः ॥</div>
+  <h1 class="page-banner-title">All Saptah Kathas</h1>
+  <p class="page-banner-hi">सम्पूर्ण कथा संग्रह</p>
+  <p class="page-banner-desc">Every Shrimad Bhagwat Saptah documented with day-wise summaries — your spiritual library.</p>
+</div>
+
+<section class="section">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="kathas-search" placeholder="Search by name, location…" aria-label="Search kathas">
+    </div>
+    <div class="filter-tabs" id="kathas-tabs"></div>
+  </div>
+  <div id="kathas-wrap"></div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="uploads/logo.png" alt="GaurMarg" class="footer-brand-logo">
+      <p>Daily summaries of Shrimad Bhagwat Kathā by Gurudev — preserving the divine nectar of each Saptah for seekers everywhere.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="kathas.html">All Kathas</a></li>
+        <li><a href="about.html">About Gurudev</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>॥ श्रीराधारमणचरणार्पणमस्तु ॥</h4>
+      <ul>
+        <li><a href="index.html">🪷 Premmarg</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Premmarg · radharamancharanarpanam asthuh 🙏</span>
+    <span class="footer-om">ॐ</span>
+  </div>
+</footer>
+
+<div id="toast"></div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

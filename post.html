@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kathā Summary – Premmarg</title>
+  <meta name="description" content="">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Extra reading comfort styles */
+    .reading-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--saffron-dark), var(--gold));
+      z-index: 2000;
+      transition: width 0.1s;
+    }
+    .post-content-en.show, .post-content-hi.show {
+      animation: fadeSlideUp 0.4s ease both;
+    }
+  </style>
+  <script>
+    (function() {
+      var theme = localStorage.getItem('premmarg-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body data-page="post">
+
+<div class="reading-progress" id="reading-progress"></div>
+<div class="page-bg"></div>
+<div class="lotus-particles"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">
+    <img src="uploads/logo.png" alt="GaurMarg" class="nav-logo">
+    <div class="nav-brand-text">
+      <span class="nav-brand-name">Premmarg</span>
+      <span class="nav-brand-hi">प्रेममार्ग</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="kathas.html">All Kathas</a></li>
+    <li><a href="about.html">About Gurudev</a></li>
+    <li>
+      <button id="theme-toggle" class="btn-ghost" style="padding:4px 8px; border:1px solid var(--glass-border); border-radius:50%;" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+    </li>
+  </ul>
+  <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="post-reader-wrap">
+  <!-- Breadcrumb -->
+  <nav class="post-breadcrumb" id="post-breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Home</a>
+    <span class="sep">›</span>
+    <a href="kathas.html">Kathas</a>
+  </nav>
+
+  <!-- Post Header -->
+  <div class="post-header">
+    <div class="post-tags-row" id="post-tags"></div>
+    <h1 class="post-title" id="post-title">Loading…</h1>
+    <div class="post-meta-row">
+      <div class="post-date">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="post-date"></span>
+      </div>
+      <!-- Language Toggle -->
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button class="lang-btn active" id="lang-en">English</button>
+        <button class="lang-btn lang-btn-hi" id="lang-hi">हिंदी</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Post Body -->
+  <div class="post-body">
+    <div class="post-content-en show" id="content-en"></div>
+    <div class="post-content-hi" id="content-hi"></div>
+  </div>
+
+  <!-- Divider + Share -->
+  <div class="post-divider"></div>
+  <div class="share-row">
+    <span class="share-label">Share · शेयर करें</span>
+    <button class="share-btn share-wa" id="share-wa">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      WhatsApp
+    </button>
+    <button class="share-btn share-copy" id="share-copy">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy Link
+    </button>
+  </div>
+
+  <!-- Prev / Next -->
+  <div class="post-nav">
+    <a href="#" class="post-nav-item post-nav-prev" id="nav-prev">
+      <div class="post-nav-dir">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Previous Day
+      </div>
+      <div class="post-nav-title">Previous</div>
+    </a>
+    <a href="#" class="post-nav-item post-nav-next" id="nav-next">
+      <div class="post-nav-dir">
+        Next Day
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+      <div class="post-nav-title">Next</div>
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="uploads/logo.png" alt="GaurMarg" class="footer-brand-logo">
+      <p>Daily summaries of Shrimad Bhagwat Kathā — preserving the divine nectar for seekers everywhere.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="kathas.html">All Kathas</a></li>
+        <li><a href="about.html">About Gurudev</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>॥ श्रीराधारमणचरणार्पणमस्तु ॥</h4>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Premmarg · radharamancharanarpanam asthuh 🙏</span>
+    <span class="footer-om">ॐ</span>
+  </div>
+</footer>
+
+<div id="toast"></div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Reading progress bar
+  window.addEventListener('scroll', () => {
+    const winH = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = winH > 0 ? (window.scrollY / winH) * 100 : 0;
+    document.getElementById('reading-progress').style.width = progress + '%';
+  }, { passive: true });
+</script>
+</body>
+</html>
