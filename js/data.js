@@ -14,9 +14,9 @@ const Data = {
   async load() {
     try {
       const [saptahsRes, daysRes, postsRes] = await Promise.all([
-        fetch(`${API_BASE}/get_saptahs.php`),
-        fetch(`${API_BASE}/get_days.php`),
-        fetch(`${API_BASE}/get_posts.php`)
+        fetch(`${API_BASE}/get_saptahs.php?_=${Date.now()}`),
+        fetch(`${API_BASE}/get_days.php?_=${Date.now()}`),
+        fetch(`${API_BASE}/get_posts.php?_=${Date.now()}`)
       ]);
       DB.saptahs = await saptahsRes.json();
       DB.days = await daysRes.json();
