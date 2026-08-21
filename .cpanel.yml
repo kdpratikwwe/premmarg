@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/your_cpanel_username/public_html/
+    - export DEPLOYPATH=/home/premmarg/public_html/
     - /bin/cp -R * $DEPLOYPATH
