@@ -168,30 +168,7 @@ function stripHtml(html) {
 /* ===== PAGE INITIALISERS ===== */
 
 /* --- INDEX PAGE --- */
-const DB_QUOTES = [
-  {
-    hi: "कमल के समान बनो—संसार के कीचड़ में रहकर भी अपनी पवित्रता और सुगंध को कभी मत खोना।",
-    en: "Be like a lotus—even when living in the mud of the world, never lose your purity and fragrance.",
-    source: "श्री गुरुदेव भगवान (Gurudev Bhagwan)"
-  },
-  {
-    hi: "भक्ति के बिना ज्ञान केवल एक भार है, और प्रेम के बिना जीवन केवल एक मरुस्थल है।",
-    en: "Wisdom without devotion is merely a burden, and life without love is nothing but a desert.",
-    source: "श्री गुरुदेव भगवान (Gurudev Bhagwan)"
-  },
-  {
-    hi: "भगवान नाम का आश्रय ही इस कलियुग में परम कल्याणकारी और दुःख नाशक है।",
-    en: "Taking shelter of the Lord's holy name is the ultimate source of welfare and destroyer of all grief in this age of Kali.",
-    source: "श्रीमद् भागवत महापुराण (Shrimad Bhagwat Mahapuran)"
-  },
-  {
-    hi: "प्रसन्नता केवल परमात्मा के चरणों में पूर्ण आत्म-समर्पण से ही प्राप्त हो सकती है।",
-    en: "True happiness can only be attained through complete surrender at the lotus feet of the Divine.",
-    source: "श्री गुरुदेव भगवान (Gurudev Bhagwan)"
-  }
-];
-
-function initQuotesCarousel() {
+async function initQuotesCarousel() {
   const nextBtn = document.getElementById('next-quote-btn');
   if (!nextBtn) return;
 
@@ -199,7 +176,23 @@ function initQuotesCarousel() {
   const quoteEn = document.getElementById('quote-en');
   const quoteSource = document.getElementById('quote-source');
   
+  let quotes = [];
+  try {
+    const res = await fetch(`api/get_quotes.php?_=${Date.now()}`);
+    quotes = await res.json();
+  } catch (err) {
+    console.error("Failed to fetch quotes", err);
+    return;
+  }
+
+  if (quotes.length === 0) return;
+
   let currentIndex = 0;
+  
+  // Display initial quote (today's featured quote is ordered first by API)
+  quoteHi.textContent = quotes[0].text_hi;
+  quoteEn.textContent = quotes[0].text_en;
+  quoteSource.textContent = "— " + quotes[0].source;
 
   nextBtn.addEventListener('click', () => {
     // Fade out
@@ -208,11 +201,11 @@ function initQuotesCarousel() {
     quoteSource.style.opacity = 0;
 
     setTimeout(() => {
-      currentIndex = (currentIndex + 1) % DB_QUOTES.length;
-      const q = DB_QUOTES[currentIndex];
+      currentIndex = (currentIndex + 1) % quotes.length;
+      const q = quotes[currentIndex];
       
-      quoteHi.textContent = q.hi;
-      quoteEn.textContent = q.en;
+      quoteHi.textContent = q.text_hi;
+      quoteEn.textContent = q.text_en;
       quoteSource.textContent = "— " + q.source;
 
       // Fade in
@@ -595,6 +588,84 @@ function initThemeToggle() {
   }
 }
 
+/* --- QUOTES ARCHIVE PAGE --- */
+let allQuotes = [];
+
+async function initQuotesPage() {
+  const wrap = document.getElementById('quotes-wrap');
+  if (!wrap) return;
+
+  try {
+    const res = await fetch(`api/get_quotes.php?_=${Date.now()}`);
+    allQuotes = await res.json();
+    
+    renderQuotesList(allQuotes);
+    
+    // Setup search
+    const searchInput = document.getElementById('quotes-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = allQuotes.filter(q => 
+          q.text_hi.toLowerCase().includes(query) ||
+          q.text_en.toLowerCase().includes(query) ||
+          q.source.toLowerCase().includes(query)
+        );
+        renderQuotesList(filtered);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load quotes:", err);
+    wrap.innerHTML = `<div class="text-center" style="grid-column: 1/-1; padding: 3rem 0; color: var(--saffron);">Failed to load Amrit Vachan.</div>`;
+  }
+}
+
+function renderQuotesList(list) {
+  const wrap = document.getElementById('quotes-wrap');
+  if (!wrap) return;
+
+  if (list.length === 0) {
+    wrap.innerHTML = `<div class="text-center" style="grid-column: 1/-1; padding: 3rem 0; color: var(--text-secondary);">No quotes found matching your search.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(q => {
+    const isToday = q.is_today && q.is_today == 1 ? 'today-highlight' : '';
+    const shareText = encodeURIComponent(`🪷 *अमृत वचन* 🪷\n\n"${q.text_hi}"\n\n"${q.text_en}"\n\n— ${q.source}\n\nRead more at: ${window.location.origin}`);
+    
+    return `
+      <div class="glass-card quote-archive-card ${isToday} reveal">
+        <div class="quote-archive-hi font-hindi">${q.text_hi}</div>
+        <div class="quote-archive-en">${q.text_en}</div>
+        <div class="quote-archive-footer">
+          <div class="quote-archive-source">— ${q.source}</div>
+          <div class="quote-actions">
+            <button class="quote-action-btn" title="Copy Thought" onclick="copyQuoteToClipboard(this, '${encodeURIComponent(q.text_hi + '\n\n' + q.text_en + '\n\n— ' + q.source)}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <a href="https://api.whatsapp.com/send?text=${shareText}" target="_blank" class="quote-action-btn" title="Share to WhatsApp">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (typeof initScrollReveal === 'function') {
+    initScrollReveal();
+  }
+}
+
+window.copyQuoteToClipboard = function(btn, encodedText) {
+  const text = decodeURIComponent(encodedText);
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('अमृत वचन कॉपी हो गया! (Copied!)');
+  }).catch(() => {
+    showToast('Failed to copy.');
+  });
+};
+
 /* ===== BOOTSTRAP ===== */
 document.addEventListener('DOMContentLoaded', async () => {
   initThemeToggle();
@@ -618,6 +689,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (body === 'katha')  initKathaPage();
   if (body === 'post')   initPostPage();
   if (body === 'about')  initAboutPage();
+  if (body === 'quotes') initQuotesPage();
 
   // Init scroll reveal after DOM elements are created
   initScrollReveal();

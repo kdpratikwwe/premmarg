@@ -127,6 +127,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 <p>Manage Posts</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="quotes.php" class="nav-link <?= $current_page=='quotes.php'?'active':'' ?>">
+                                <i class="nav-icon fas fa-quote-left"></i>
+                                <p>Manage Quotes</p>
+                            </a>
+                        </li>
                         <li class="nav-item mt-4">
                             <a href="logout.php" class="nav-link text-danger" onclick="confirmLogout(event)">
                                 <i class="nav-icon fas fa-sign-out-alt"></i>
@@ -150,6 +156,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 elseif ($current_page == 'saptahs.php') echo 'Manage Saptahs';
                                 elseif ($current_page == 'days.php') echo 'Manage Days';
                                 elseif ($current_page == 'posts.php') echo 'Manage Posts';
+                                elseif ($current_page == 'quotes.php') echo 'Manage Quotes';
                                 ?>
                             </h3>
                         </div>
