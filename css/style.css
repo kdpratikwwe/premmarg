@@ -1788,6 +1788,14 @@ footer {
   .hero-inner { grid-template-columns: 1fr; text-align: center; }
   .hero-img-wrap { order: -1; }
   .hero-img-ring { width: 240px; height: 290px; margin: 0 auto; }
+  .hero-mandala {
+    left: 50%;
+    right: auto;
+    top: 260px;
+    transform: translate(-50%, -50%);
+    width: 450px;
+    height: 450px;
+  }
   .hero-actions { justify-content: center; }
   .hero-badge { justify-content: center; }
   .hero-desc { margin: 0 auto 2rem; }
