@@ -67,8 +67,8 @@ if ($action == 'delete' && $id) {
                         <td><?= htmlspecialchars($row['title']) ?></td>
                         <td><span class="font-hindi text-success"><?= htmlspecialchars($row['title_hi']) ?></span></td>
                         <td class="text-center pe-4">
-                            <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm me-1"><i class="fas fa-edit me-1"></i>Edit</a>
-                            <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this Day and all its posts?')"><i class="fas fa-trash me-1"></i>Delete</a>
+                            <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm me-1" title="Edit Day"><i class="fas fa-edit"></i></a>
+                            <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this Day and all its posts?')" title="Delete Day"><i class="fas fa-trash"></i></a>
                         </td>
                     </tr>
                     <?php endwhile; ?>

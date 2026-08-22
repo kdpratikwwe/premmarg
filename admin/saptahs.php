@@ -70,8 +70,8 @@ if ($action == 'delete' && $id) {
                         <td><?= htmlspecialchars($row['year']) ?></td>
                         <td><i class="fas fa-map-marker-alt text-danger me-1"></i><?= htmlspecialchars($row['location']) ?></td>
                         <td class="text-center pe-4">
-                            <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm me-1"><i class="fas fa-edit me-1"></i>Edit</a>
-                            <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this Saptah and all its days/posts?')"><i class="fas fa-trash me-1"></i>Delete</a>
+                            <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm me-1" title="Edit Saptah"><i class="fas fa-edit"></i></a>
+                            <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this Saptah and all its days/posts?')" title="Delete Saptah"><i class="fas fa-trash"></i></a>
                         </td>
                     </tr>
                     <?php endwhile; ?>
