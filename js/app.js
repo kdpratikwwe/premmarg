@@ -228,21 +228,32 @@ function renderHeroLatestSaptah() {
   if (!wrap) return;
 
   const saptah = Data.getSaptahs()[0]; // Most recent
+  if (!saptah) return;
   const days   = Data.getDays(saptah.id);
 
   wrap.querySelector('.strip-saptah-title').textContent  = saptah.title;
   wrap.querySelector('.strip-saptah-title-hi').textContent = saptah.title_hi;
-  wrap.querySelector('.strip-saptah-loc').textContent    = `📍 ${saptah.location}`;
-  wrap.querySelector('.strip-saptah-year').textContent   = saptah.year;
-  wrap.querySelector('.strip-saptah-link').href          = `katha.html?slug=${saptah.slug}`;
+  wrap.querySelector('.strip-saptah-loc').innerHTML      = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ` + saptah.location;
+  wrap.querySelector('.strip-saptah-year').textContent     = saptah.year;
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPreview = urlParams.get('preview') === '1';
+  const previewParam = isPreview ? '&preview=1' : '';
 
-  const daysEl = wrap.querySelector('.strip-days');
-  daysEl.innerHTML = days.map(d => {
-    const hasPosts = Data.getPostsForDay(d.id).length > 0;
-    const post     = hasPosts ? Data.getPostsForDay(d.id)[0] : null;
-    const href     = post ? `post.html?slug=${post.slug}` : `katha.html?slug=${saptah.slug}`;
+  const link = wrap.querySelector('.strip-saptah-link');
+  if (link) link.href = `katha.html?slug=${saptah.slug}${previewParam}`;
+
+  const daysEl = document.getElementById('strip-days');
+  if (!daysEl) return;
+
+  // Filter out days that do not have active posts (drafts are only in DB if preview=1)
+  const visibleDays = days.filter(d => Data.getPostsForDay(d.id).length > 0);
+
+  daysEl.innerHTML = visibleDays.map(d => {
+    const post = Data.getPostsForDay(d.id)[0];
+    const href = `post.html?slug=${post.slug}${previewParam}`;
     return `
-      <a href="${href}" class="strip-day ${hasPosts ? 'has-post' : ''}">
+      <a href="${href}" class="strip-day has-post">
         <div class="strip-day-num">${d.day_number}</div>
         <span class="strip-day-label">${d.title_hi || d.title}</span>
         <span class="strip-day-status"></span>
@@ -361,15 +372,21 @@ function initKathaPage() {
   if (locTag) locTag.textContent = '📍 ' + saptah.location;
 
   // Days timeline
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPreview = urlParams.get('preview') === '1';
+  const previewParam = isPreview ? '&preview=1' : '';
+
   const days = Data.getDays(saptah.id);
   const tlWrap = document.getElementById('timeline-wrap');
   if (tlWrap) {
-    tlWrap.innerHTML = days.map(d => {
+    // Filter out timeline days that do not have active posts (drafts are only in DB if preview=1)
+    const visibleDays = days.filter(d => Data.getPostsForDay(d.id).length > 0);
+    
+    tlWrap.innerHTML = visibleDays.map(d => {
       const posts = Data.getPostsForDay(d.id);
-      const href  = posts.length ? `post.html?slug=${posts[0].slug}` : '#';
-      const cls   = posts.length ? 'active' : '';
+      const href  = `post.html?slug=${posts[0].slug}${previewParam}`;
       return `
-        <a href="${href}" class="timeline-item ${cls} reveal">
+        <a href="${href}" class="timeline-item active reveal">
           <div class="timeline-num">
             <span class="timeline-num-n">${d.day_number}</span>
             <span class="timeline-num-l">Day</span>
@@ -422,10 +439,14 @@ function initPostPage() {
   // Breadcrumb
   const bc = document.getElementById('post-breadcrumb');
   if (bc && saptah) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPreview = urlParams.get('preview') === '1';
+    const previewParam = isPreview ? '&preview=1' : '';
+
     bc.innerHTML = `
       <a href="index.html">Home</a><span class="sep">›</span>
       <a href="kathas.html">Kathas</a><span class="sep">›</span>
-      <a href="katha.html?slug=${saptah.slug}">${saptah.title}</a><span class="sep">›</span>
+      <a href="katha.html?slug=${saptah.slug}${previewParam}">${saptah.title}</a><span class="sep">›</span>
       <span style="color:var(--text-secondary)">Day ${day?.day_number}</span>`;
   }
 
