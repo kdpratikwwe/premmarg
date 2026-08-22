@@ -28,36 +28,54 @@ if ($action == 'delete' && $id) {
 }
 ?>
 
-<div class="header">
-    <h1>Manage Days</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold">Manage Days</h4>
     <?php if($action == 'list'): ?>
-        <a href="?action=edit" class="btn">Add New Day</a>
+        <a href="?action=edit" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add New Day</a>
     <?php else: ?>
-        <a href="days.php" class="btn btn-sm" style="background:#555">Back to List</a>
+        <a href="days.php" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-2"></i>Back to List</a>
     <?php endif; ?>
 </div>
 
 <?php if ($action == 'list'): ?>
-<div class="card">
-    <table>
-        <tr><th>ID</th><th>Saptah</th><th>Day #</th><th>Title</th><th>Title (Hi)</th><th>Actions</th></tr>
-        <?php
-        $stmt = $pdo->query('SELECT d.*, s.title as saptah_title FROM days d JOIN saptah s ON d.saptah_id = s.id ORDER BY d.saptah_id DESC, d.day_number ASC');
-        while ($row = $stmt->fetch()):
-        ?>
-        <tr>
-            <td><?= $row['id'] ?></td>
-            <td><?= htmlspecialchars($row['saptah_title']) ?></td>
-            <td>Day <?= $row['day_number'] ?></td>
-            <td><?= htmlspecialchars($row['title']) ?></td>
-            <td><?= htmlspecialchars($row['title_hi']) ?></td>
-            <td>
-                <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-sm">Edit</a>
-                <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Day and all its posts?')">Delete</a>
-            </td>
-        </tr>
-        <?php endwhile; ?>
-    </table>
+<div class="card border-0 shadow-sm rounded-3">
+    <div class="card-header bg-body-secondary py-3 border-0">
+        <h5 class="card-title mb-0 fw-bold"><i class="fas fa-calendar-alt me-2 text-primary"></i>Day List</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Saptah</th>
+                        <th>Day Number</th>
+                        <th>Title</th>
+                        <th>Title (Hindi)</th>
+                        <th class="text-center pe-4" style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $stmt = $pdo->query('SELECT d.*, s.title as saptah_title FROM days d JOIN saptah s ON d.saptah_id = s.id ORDER BY d.saptah_id DESC, d.day_number ASC');
+                    while ($row = $stmt->fetch()):
+                    ?>
+                    <tr>
+                        <td class="ps-4 fw-bold"><?= $row['id'] ?></td>
+                        <td><?= htmlspecialchars($row['saptah_title']) ?></td>
+                        <td><span class="badge bg-secondary px-2.5 py-1.5 rounded-pill">Day <?= $row['day_number'] ?></span></td>
+                        <td><?= htmlspecialchars($row['title']) ?></td>
+                        <td><span class="font-hindi text-success"><?= htmlspecialchars($row['title_hi']) ?></span></td>
+                        <td class="text-center pe-4">
+                            <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm me-1"><i class="fas fa-edit me-1"></i>Edit</a>
+                            <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this Day and all its posts?')"><i class="fas fa-trash me-1"></i>Delete</a>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <?php elseif ($action == 'edit'): 
@@ -69,32 +87,37 @@ if ($action == 'delete' && $id) {
     }
     $saptahs = $pdo->query('SELECT id, title, year FROM saptah ORDER BY year DESC')->fetchAll();
 ?>
-<div class="card">
+<div class="card border-0 shadow-sm rounded-3 p-4">
+    <h5 class="fw-bold mb-4 border-bottom pb-2">
+        <i class="fas fa-edit text-primary me-2"></i><?= $id ? 'Edit Day details' : 'Create New Day' ?>
+    </h5>
     <form method="post">
-        <div style="display:flex; gap:20px">
-            <div class="form-group" style="flex:2">
-                <label>Saptah</label>
-                <select name="saptah_id" required>
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label fw-semibold">Saptah</label>
+                <select name="saptah_id" class="form-select" required>
                     <option value="">Select Saptah</option>
                     <?php foreach($saptahs as $s): ?>
                         <option value="<?= $s['id'] ?>" <?= $s['id']==$day['saptah_id']?'selected':'' ?>><?= htmlspecialchars($s['title'] . ' (' . $s['year'] . ')') ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="form-group" style="flex:1">
-                <label>Day Number (1-7)</label>
-                <input type="number" name="day_number" value="<?= htmlspecialchars($day['day_number']) ?>" min="1" max="7" required>
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">Day Number (1-7)</label>
+                <input type="number" name="day_number" class="form-control" value="<?= htmlspecialchars($day['day_number']) ?>" min="1" max="7" required>
             </div>
         </div>
-        <div class="form-group">
-            <label>Title (English)</label>
-            <input type="text" name="title" value="<?= htmlspecialchars($day['title']) ?>" required>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Title (English)</label>
+            <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($day['title']) ?>" required>
         </div>
-        <div class="form-group">
-            <label>Title (Hindi)</label>
-            <input type="text" name="title_hi" value="<?= htmlspecialchars($day['title_hi']) ?>" required>
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Title (Hindi)</label>
+            <input type="text" name="title_hi" class="form-control" value="<?= htmlspecialchars($day['title_hi']) ?>" required>
         </div>
-        <button type="submit" class="btn">Save Day</button>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-2"></i>Save Day</button>
+        </div>
     </form>
 </div>
 <?php endif; ?>

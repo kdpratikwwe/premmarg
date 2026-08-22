@@ -7,3 +7,4 @@ Thumbs.db
 
 # Database configs
 api/config.php
+admin_backup/
