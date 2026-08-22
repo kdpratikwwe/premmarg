@@ -4,3 +4,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Database configs
+api/config.php
