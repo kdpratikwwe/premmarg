@@ -196,14 +196,19 @@ async function initUserAuth() {
 }
 
 function renderNavbarUser() {
+  const navbar = document.querySelector('.navbar');
   const navLinks = document.querySelector('.nav-links');
   if (!navLinks) return;
 
   // Remove existing user items if present
   navLinks.querySelectorAll('.nav-user-item').forEach(el => el.remove());
+  if (navbar) {
+    navbar.querySelectorAll('.nav-mobile-user').forEach(el => el.remove());
+  }
 
   const themeBtn = document.getElementById('theme-toggle');
   const themeLi = themeBtn ? themeBtn.closest('li') : null;
+  const currentUrl = encodeURIComponent(window.location.href);
 
   const li = document.createElement('li');
   li.className = 'nav-user-item';
@@ -239,18 +244,18 @@ function renderNavbarUser() {
     // Dropdown toggle
     const toggleBtn = li.querySelector('#nav-user-toggle');
     const dropdown = li.querySelector('#nav-user-dropdown');
-    toggleBtn.addEventListener('click', (e) => {
+    toggleBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       dropdown.classList.toggle('open');
     });
 
     document.addEventListener('click', () => {
-      dropdown.classList.remove('open');
+      dropdown?.classList.remove('open');
     });
 
     // Logout action
     const logoutBtn = li.querySelector('#nav-user-logout');
-    logoutBtn.addEventListener('click', async () => {
+    logoutBtn?.addEventListener('click', async () => {
       try {
         await fetch('api/auth.php?action=logout');
         Data.currentUser = null;
@@ -272,9 +277,8 @@ function renderNavbarUser() {
     });
 
   } else {
-    const currentUrl = encodeURIComponent(window.location.href);
     li.innerHTML = `
-      <a href="login.html?redirect=${currentUrl}" class="btn btn-sm btn-outline" style="padding:4px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;">
+      <a href="login.html?redirect=${currentUrl}" class="btn btn-sm btn-outline" style="border-radius:20px;">
         Sign In
       </a>
     `;
@@ -284,6 +288,32 @@ function renderNavbarUser() {
     navLinks.insertBefore(li, themeLi);
   } else {
     navLinks.appendChild(li);
+  }
+
+  // Render Direct Mobile Button in the Top Navbar
+  if (navbar) {
+    const hamburger = navbar.querySelector('.nav-hamburger');
+    if (hamburger) {
+      const mobileDiv = document.createElement('div');
+      mobileDiv.className = 'nav-mobile-user';
+
+      if (Data.currentUser) {
+        const initial = Data.currentUser.name ? Data.currentUser.name.charAt(0).toUpperCase() : 'भ';
+        mobileDiv.innerHTML = `
+          <a href="bookmarks.html" class="nav-mobile-avatar" title="My Bookmarks">
+            <span>${initial}</span>
+          </a>
+        `;
+      } else {
+        mobileDiv.innerHTML = `
+          <a href="login.html?redirect=${currentUrl}" class="nav-mobile-signin-btn">
+            Sign In
+          </a>
+        `;
+      }
+
+      navbar.insertBefore(mobileDiv, hamburger);
+    }
   }
 }
 

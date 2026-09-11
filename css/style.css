@@ -2174,11 +2174,57 @@ footer {
   color: #6ee7b7;
 }
 
+/* Mobile Direct Top-Bar User Action (hidden on desktop) */
+.nav-mobile-user {
+  display: none;
+}
+
 /* ============================================================
    MOBILE RESPONSIVENESS: AUTH, COMMENTS, BOOKMARKS & USER NAV
    ============================================================ */
 
 @media (max-width: 660px) {
+  /* Mobile Direct Top-Bar User Action */
+  .nav-mobile-user {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 0.75rem;
+  }
+  .nav-mobile-signin-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--saffron-light);
+    background: rgba(212, 135, 42, 0.12);
+    border: 1px solid rgba(212, 135, 42, 0.35);
+    text-decoration: none;
+    transition: var(--transition-fast);
+  }
+  .nav-mobile-signin-btn:hover,
+  .nav-mobile-signin-btn:active {
+    background: var(--saffron);
+    color: #fff;
+    border-color: var(--saffron);
+  }
+  .nav-mobile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--saffron), var(--gold));
+    color: #1a0808;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 0 10px rgba(212, 135, 42, 0.35);
+  }
+
   /* Navbar User Account in Mobile Drawer */
   .nav-user-item {
     width: 100%;
