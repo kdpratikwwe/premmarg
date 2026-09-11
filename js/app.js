@@ -41,7 +41,11 @@ function initNavbar() {
       hamburger.setAttribute('aria-expanded', isOpen);
     });
     navLinks.addEventListener('click', (e) => {
-      if (e.target.tagName === 'A') navLinks.classList.remove('open');
+      if (e.target.closest('#nav-user-toggle') || e.target.closest('#theme-toggle')) return;
+      if (e.target.tagName === 'A' || e.target.closest('a') || e.target.closest('#nav-user-logout')) {
+        navLinks.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 

@@ -80,7 +80,7 @@ $comments = $stmt->fetchAll();
                 <p class="text-muted mb-0">Review and moderate bhav & reflections shared by readers before they appear on the blog.</p>
             </div>
             <!-- Search -->
-            <form method="GET" class="d-flex gap-2">
+            <form method="GET" class="d-flex gap-2 flex-grow-1 flex-md-grow-0" style="max-width: 360px; width: 100%;">
                 <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
                 <div class="input-group">
                     <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>

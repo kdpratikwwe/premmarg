@@ -2174,3 +2174,137 @@ footer {
   color: #6ee7b7;
 }
 
+/* ============================================================
+   MOBILE RESPONSIVENESS: AUTH, COMMENTS, BOOKMARKS & USER NAV
+   ============================================================ */
+
+@media (max-width: 660px) {
+  /* Navbar User Account in Mobile Drawer */
+  .nav-user-item {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--glass-border);
+  }
+  .nav-user-item > .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.92rem;
+  }
+  .nav-user-dropdown {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .nav-user-btn {
+    width: 100%;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+  }
+  .nav-user-menu {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+    box-shadow: none;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--glass-border);
+  }
+  .nav-user-menu a, .nav-user-menu button {
+    padding: 11px 16px;
+    font-size: 0.9rem;
+  }
+
+  /* Auth / Login on Mobile */
+  .auth-wrap {
+    margin: 110px auto 40px;
+    padding: 0 1.2rem;
+    max-width: 100%;
+  }
+  .auth-card {
+    padding: 2rem 1.3rem;
+  }
+  .auth-tabs {
+    margin-bottom: 1.5rem;
+  }
+  .auth-tab {
+    font-size: 0.88rem;
+    padding: 9px 0;
+  }
+  .auth-input {
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+    padding: 12px 14px;
+  }
+
+  /* Post Meta & Bookmark Button on Mobile */
+  .post-meta-row {
+    gap: 0.8rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .btn-bookmark {
+    padding: 5px 12px;
+    font-size: 0.76rem;
+  }
+  .lang-toggle {
+    margin-left: auto;
+  }
+
+  /* Devotional Comments Section on Mobile */
+  .comments-section {
+    margin-top: 2.8rem;
+    padding-top: 2rem;
+  }
+  .comments-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 1.4rem;
+  }
+  .comments-title {
+    font-size: 1.25rem;
+  }
+  .comment-form-card {
+    padding: 1.25rem 1rem;
+    margin-bottom: 1.6rem;
+  }
+  .comment-textarea {
+    font-size: 16px; /* Prevents iOS auto-zoom */
+    min-height: 80px;
+    padding: 10px 12px;
+  }
+  .comment-submit-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .comment-submit-row .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+  }
+  .comment-auth-prompt {
+    padding: 1.5rem 1.1rem;
+  }
+  .comment-auth-prompt .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .comment-item {
+    padding: 1rem 1.1rem;
+  }
+  .comment-body {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  /* Bookmarks Archive on Mobile */
+  .post-card-excerpt {
+    word-break: break-word;
+  }
+}
+
+

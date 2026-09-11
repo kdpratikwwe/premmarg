@@ -166,8 +166,8 @@ if (($action === 'edit' || $action === 'view') && $id > 0) {
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-body-secondary py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
             <h5 class="card-title mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Devotee Directory</h5>
-            <form method="GET" class="d-flex gap-2">
-                <div class="input-group input-group-sm" style="width: 280px;">
+            <form method="GET" class="d-flex gap-2 flex-grow-1 flex-md-grow-0" style="max-width: 320px; width: 100%;">
+                <div class="input-group input-group-sm">
                     <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
                     <input type="text" name="search" class="form-control" placeholder="Search name or email..." value="<?= htmlspecialchars($search) ?>">
                     <?php if (!empty($search)): ?>
