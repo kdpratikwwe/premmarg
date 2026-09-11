@@ -6,6 +6,12 @@ if (!isset($_SESSION['admin_id'])) {
 }
 require_once '../api/config.php';
 $current_page = basename($_SERVER['PHP_SELF']);
+
+$pending_comments_count = 0;
+try {
+    $pending_comments_count = (int)$pdo->query("SELECT COUNT(*) FROM comments WHERE status = 'pending'")->fetchColumn();
+} catch (Exception $e) {}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -133,6 +139,23 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 <p>Manage Quotes</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="comments.php" class="nav-link <?= $current_page=='comments.php'?'active':'' ?>">
+                                <i class="nav-icon fas fa-comments"></i>
+                                <p>
+                                    Comments
+                                    <?php if ($pending_comments_count > 0): ?>
+                                        <span class="badge bg-warning text-dark float-end"><?= $pending_comments_count ?></span>
+                                    <?php endif; ?>
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="users.php" class="nav-link <?= $current_page=='users.php'?'active':'' ?>">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>Manage Users</p>
+                            </a>
+                        </li>
                         <li class="nav-item mt-4">
                             <a href="logout.php" class="nav-link text-danger" onclick="confirmLogout(event)">
                                 <i class="nav-icon fas fa-sign-out-alt"></i>
@@ -157,6 +180,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 elseif ($current_page == 'days.php') echo 'Manage Days';
                                 elseif ($current_page == 'posts.php') echo 'Manage Posts';
                                 elseif ($current_page == 'quotes.php') echo 'Manage Quotes';
+                                elseif ($current_page == 'comments.php') echo 'Manage Comments';
+                                elseif ($current_page == 'users.php') echo 'Manage Users';
                                 ?>
                             </h3>
                         </div>

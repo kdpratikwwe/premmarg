@@ -4,6 +4,9 @@ require_once 'header.php';
 $saptahs = $pdo->query('SELECT COUNT(*) FROM saptah')->fetchColumn();
 $days = $pdo->query('SELECT COUNT(*) FROM days')->fetchColumn();
 $posts = $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
+$pendingComments = (int)$pdo->query('SELECT COUNT(*) FROM comments WHERE status = "pending"')->fetchColumn();
+$totalUsers = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+
 ?>
 <div class="row mb-4">
     <div class="col-md-12">
@@ -23,7 +26,7 @@ $posts = $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
 
 <div class="row">
     <!-- Saptahs Stats Box -->
-    <div class="col-lg-4 col-sm-6 col-12 mb-4">
+    <div class="col-lg-3 col-sm-6 col-12 mb-4">
         <div class="card border-0 shadow-sm bg-primary text-white position-relative overflow-hidden" style="min-height: 140px;">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
@@ -43,7 +46,7 @@ $posts = $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
     </div>
 
     <!-- Days Stats Box -->
-    <div class="col-lg-4 col-sm-6 col-12 mb-4">
+    <div class="col-lg-3 col-sm-6 col-12 mb-4">
         <div class="card border-0 shadow-sm bg-success text-white position-relative overflow-hidden" style="min-height: 140px;">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
@@ -63,7 +66,7 @@ $posts = $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
     </div>
 
     <!-- Posts Stats Box -->
-    <div class="col-lg-4 col-sm-12 col-12 mb-4">
+    <div class="col-lg-3 col-sm-6 col-12 mb-4">
         <div class="card border-0 shadow-sm bg-warning text-dark position-relative overflow-hidden" style="min-height: 140px;">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
@@ -77,6 +80,26 @@ $posts = $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
                 </div>
                 <a href="posts.php" class="text-dark text-decoration-none d-flex align-items-center mt-3 opacity-75 hover-opacity-100" style="font-size: 0.9rem;">
                     Manage Posts <i class="fas fa-arrow-circle-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Stats Box -->
+    <div class="col-lg-3 col-sm-6 col-12 mb-4">
+        <div class="card border-0 shadow-sm bg-danger text-white position-relative overflow-hidden" style="min-height: 140px;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="fw-bold mb-1"><?= $pendingComments ?></h2>
+                        <span class="text-white-50">Pending Comments</span>
+                    </div>
+                    <div class="opacity-25" style="font-size: 3rem;">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                </div>
+                <a href="comments.php?filter=pending" class="text-white text-decoration-none d-flex align-items-center mt-3 opacity-75 hover-opacity-100" style="font-size: 0.9rem;">
+                    Review Comments <i class="fas fa-arrow-circle-right ms-2"></i>
                 </a>
             </div>
         </div>
@@ -95,6 +118,7 @@ $posts = $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
                     <a href="saptahs.php?action=edit" class="btn btn-outline-primary py-2.5 text-start fw-semibold shadow-sm"><i class="fas fa-plus-circle me-2"></i>Create New Saptah</a>
                     <a href="days.php?action=edit" class="btn btn-outline-success py-2.5 text-start fw-semibold shadow-sm"><i class="fas fa-calendar-plus me-2"></i>Add New Saptah Day</a>
                     <a href="posts.php?action=edit" class="btn btn-outline-warning py-2.5 text-start fw-semibold text-dark shadow-sm"><i class="fas fa-file-signature me-2"></i>Add Post Summary</a>
+                    <a href="users.php" class="btn btn-outline-info py-2.5 text-start fw-semibold shadow-sm"><i class="fas fa-users me-2"></i>Manage Devotees (<?= $totalUsers ?>)</a>
                 </div>
             </div>
         </div>

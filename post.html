@@ -75,6 +75,11 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <span id="post-date"></span>
       </div>
+      <!-- Bookmark Button -->
+      <button class="btn-bookmark" id="post-bookmark-btn" title="Save this summary to your bookmarks">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        <span id="bookmark-text">Save</span>
+      </button>
       <!-- Language Toggle -->
       <div class="lang-toggle" role="group" aria-label="Language">
         <button class="lang-btn active" id="lang-en">English</button>
@@ -102,6 +107,24 @@
       Copy Link
     </button>
   </div>
+
+  <!-- Devotional Comments Section -->
+  <section class="comments-section" id="comments-section">
+    <div class="comments-header">
+      <h3 class="comments-title">
+        <span>🪷</span> Devotional Reflections · विचार एवं भाव
+      </h3>
+      <span class="comments-count-pill" id="comments-count">0 reflections</span>
+    </div>
+
+    <!-- Container for form (if logged in) or prompt (if guest) -->
+    <div id="comment-form-container"></div>
+
+    <!-- List of approved comments -->
+    <div class="comments-list" id="comments-list">
+      <p class="text-muted" style="font-size:0.9rem;">Loading reflections…</p>
+    </div>
+  </section>
 
   <!-- Prev / Next -->
   <div class="post-nav">

@@ -168,6 +168,121 @@ function stripHtml(html) {
   return d.textContent || '';
 }
 
+/** Escape HTML entities for safety */
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* ===== USER AUTHENTICATION & NAVBAR ===== */
+async function initUserAuth() {
+  try {
+    const res = await fetch(`api/auth.php?action=status&_=${Date.now()}`);
+    const data = await res.json();
+    Data.currentUser = (data && data.logged_in && data.user) ? data.user : null;
+  } catch (e) {
+    Data.currentUser = null;
+  }
+  renderNavbarUser();
+}
+
+function renderNavbarUser() {
+  const navLinks = document.querySelector('.nav-links');
+  if (!navLinks) return;
+
+  // Remove existing user items if present
+  navLinks.querySelectorAll('.nav-user-item').forEach(el => el.remove());
+
+  const themeBtn = document.getElementById('theme-toggle');
+  const themeLi = themeBtn ? themeBtn.closest('li') : null;
+
+  const li = document.createElement('li');
+  li.className = 'nav-user-item';
+
+  if (Data.currentUser) {
+    const initial = Data.currentUser.name ? Data.currentUser.name.charAt(0).toUpperCase() : 'भ';
+    const firstName = Data.currentUser.name ? Data.currentUser.name.split(' ')[0] : 'Devotee';
+
+    li.innerHTML = `
+      <div class="nav-user-dropdown" id="nav-user-dropdown">
+        <button class="nav-user-btn" id="nav-user-toggle" aria-haspopup="true" aria-expanded="false" title="Devotee Account">
+          <span class="nav-user-avatar">${initial}</span>
+          <span class="nav-user-name">${escapeHtml(firstName)}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="nav-user-menu" id="nav-user-menu">
+          <div style="padding:8px 18px;font-size:0.75rem;color:var(--text-muted);border-bottom:1px solid var(--glass-border);">
+            Signed in as<br><strong style="color:var(--text-primary);">${escapeHtml(Data.currentUser.name)}</strong>
+          </div>
+          <a href="bookmarks.html">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+            Saved Summaries
+          </a>
+          <hr>
+          <button id="nav-user-logout" style="color:#ff7875;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Dropdown toggle
+    const toggleBtn = li.querySelector('#nav-user-toggle');
+    const dropdown = li.querySelector('#nav-user-dropdown');
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+      dropdown.classList.remove('open');
+    });
+
+    // Logout action
+    const logoutBtn = li.querySelector('#nav-user-logout');
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch('api/auth.php?action=logout');
+        Data.currentUser = null;
+        showToast('Logged out. राधे राधे! 🙏');
+        renderNavbarUser();
+        if (document.body.dataset.page === 'bookmarks') {
+          initBookmarksPage();
+        } else if (document.body.dataset.page === 'post') {
+          const slug = getParam('slug');
+          const post = Data.getPost(slug);
+          if (post) {
+            initPostBookmarks(post);
+            initPostComments(post);
+          }
+        }
+      } catch (err) {
+        showToast('Logout failed.');
+      }
+    });
+
+  } else {
+    const currentUrl = encodeURIComponent(window.location.href);
+    li.innerHTML = `
+      <a href="login.html?redirect=${currentUrl}" class="btn btn-sm btn-outline" style="padding:4px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;">
+        Sign In
+      </a>
+    `;
+  }
+
+  if (themeLi) {
+    navLinks.insertBefore(li, themeLi);
+  } else {
+    navLinks.appendChild(li);
+  }
+}
+
 /* ===== PAGE INITIALISERS ===== */
 
 /* --- INDEX PAGE --- */
@@ -597,7 +712,298 @@ function initPostPage() {
       nextEl.style.visibility = 'hidden';
     }
   }
+
+  // Initialize Bookmarks and Comments
+  initPostBookmarks(post);
+  initPostComments(post);
 }
+
+/* --- POST BOOKMARKS --- */
+async function initPostBookmarks(post) {
+  const btn = document.getElementById('post-bookmark-btn');
+  const txt = document.getElementById('bookmark-text');
+  if (!btn) return;
+
+  // Check current status
+  try {
+    const res = await fetch(`api/bookmarks.php?action=check&post_id=${post.id}&_=${Date.now()}`);
+    const data = await res.json();
+    if (data && data.bookmarked) {
+      btn.classList.add('bookmarked');
+      if (txt) txt.textContent = 'Saved';
+    } else {
+      btn.classList.remove('bookmarked');
+      if (txt) txt.textContent = 'Save';
+    }
+  } catch (e) {}
+
+  // Toggle click
+  btn.onclick = async () => {
+    if (!Data.currentUser) {
+      showToast('Please sign in to save this summary 🙏');
+      setTimeout(() => {
+        window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+      }, 700);
+      return;
+    }
+
+    try {
+      const res = await fetch('api/bookmarks.php?action=toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: post.id })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (data.bookmarked) {
+          btn.classList.add('bookmarked');
+          if (txt) txt.textContent = 'Saved';
+          showToast(data.message || 'Saved to your bookmarks! 🔖');
+        } else {
+          btn.classList.remove('bookmarked');
+          if (txt) txt.textContent = 'Save';
+          showToast(data.message || 'Removed from your bookmarks.');
+        }
+      } else if (data.require_login) {
+        showToast('Session expired. Please sign in again.');
+        setTimeout(() => {
+          window.location.href = `login.html?redirect=${encodeURIComponent(window.location.href)}`;
+        }, 700);
+      }
+    } catch (err) {
+      showToast('Could not update bookmark.');
+    }
+  };
+}
+
+/* --- POST COMMENTS --- */
+async function initPostComments(post) {
+  const formWrap = document.getElementById('comment-form-container');
+  const listWrap = document.getElementById('comments-list');
+  const countPill = document.getElementById('comments-count');
+  if (!formWrap || !listWrap) return;
+
+  // 1. Render form (if logged in) or prompt (if guest)
+  if (Data.currentUser) {
+    const initial = Data.currentUser.name ? Data.currentUser.name.charAt(0).toUpperCase() : 'भ';
+    formWrap.innerHTML = `
+      <div class="comment-form-card reveal">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div class="comment-avatar">${initial}</div>
+          <div>
+            <span class="comment-author">${escapeHtml(Data.currentUser.name)}</span>
+            <span class="text-muted" style="font-size:0.75rem;margin-left:6px;">· Devotee</span>
+          </div>
+        </div>
+        <form id="comment-post-form">
+          <textarea id="comment-post-text" class="comment-textarea" placeholder="Share your devotional thoughts, bhāva, or reflections from this Katha summary..." required minlength="3" maxlength="2000"></textarea>
+          <div class="comment-submit-row">
+            <button type="submit" class="btn btn-sm btn-primary" id="comment-submit-btn">
+              Submit Reflection · विचार साझा करें
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    const form = document.getElementById('comment-post-form');
+    const textarea = document.getElementById('comment-post-text');
+    const submitBtn = document.getElementById('comment-submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = textarea.value.trim();
+      if (text.length < 3) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      try {
+        const res = await fetch('api/comments.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ post_id: post.id, comment_text: text })
+        });
+        const data = await res.json();
+        if (data.success) {
+          textarea.value = '';
+          showToast(data.message || 'Reflection submitted for review! 🙏');
+          const notice = document.createElement('div');
+          notice.className = 'auth-alert auth-alert-success';
+          notice.style.display = 'block';
+          notice.style.marginTop = '12px';
+          notice.textContent = data.message || 'Your reflection (भाव) has been submitted for blessings and will appear once approved by admin. Radhe Radhe! 🙏';
+          form.appendChild(notice);
+          setTimeout(() => notice.remove(), 9000);
+        } else {
+          showToast(data.error || 'Failed to submit comment.');
+        }
+      } catch (err) {
+        showToast('Network error while submitting comment.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Reflection · विचार साझा करें';
+      }
+    });
+  } else {
+    const currentUrl = encodeURIComponent(window.location.href);
+    formWrap.innerHTML = `
+      <div class="comment-auth-prompt reveal">
+        <div style="font-size:1.8rem;margin-bottom:0.4rem;">🪷</div>
+        <h4 style="font-family:var(--font-heading);color:var(--saffron-light);margin-bottom:0.4rem;">Share Your Reflections · अपने भाव साझा करें</h4>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.2rem;max-width:500px;margin-left:auto;margin-right:auto;">
+          Sign in to share devotional thoughts, realizations, or reflections on today's Katha.
+        </p>
+        <a href="login.html?redirect=${currentUrl}" class="btn btn-outline" style="border-radius:20px;padding:6px 22px;">
+          Sign In to Reflect · प्रवेश करें
+        </a>
+      </div>
+    `;
+  }
+
+  // 2. Load approved comments
+  try {
+    const res = await fetch(`api/comments.php?post_id=${post.id}&_=${Date.now()}`);
+    const comments = await res.json();
+
+    if (countPill) {
+      countPill.textContent = `${comments.length} reflection${comments.length === 1 ? '' : 's'}`;
+    }
+
+    if (!Array.isArray(comments) || comments.length === 0) {
+      listWrap.innerHTML = `
+        <div style="text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.92rem;">
+          <div style="font-size:1.6rem;opacity:0.4;margin-bottom:0.5rem;">ॐ</div>
+          Be the first devotee to share reflections on this summary. 🙏
+        </div>
+      `;
+    } else {
+      listWrap.innerHTML = comments.map(c => {
+        const initial = c.user_name ? c.user_name.charAt(0).toUpperCase() : 'भ';
+        return `
+          <div class="comment-item reveal">
+            <div class="comment-meta">
+              <div class="comment-avatar">${initial}</div>
+              <div>
+                <div class="comment-author">${escapeHtml(c.user_name)}</div>
+                <div class="comment-time">${Data.formatDate(c.created_at)}</div>
+              </div>
+            </div>
+            <div class="comment-body">${escapeHtml(c.comment_text)}</div>
+          </div>
+        `;
+      }).join('');
+      initScrollReveal();
+    }
+  } catch (err) {
+    listWrap.innerHTML = `<p class="text-muted" style="font-size:0.88rem;">Unable to load reflections at this time.</p>`;
+  }
+}
+
+/* --- BOOKMARKS PAGE --- */
+async function initBookmarksPage() {
+  const wrap = document.getElementById('bookmarks-wrap');
+  if (!wrap) return;
+
+  if (!Data.currentUser) {
+    const redirect = encodeURIComponent('bookmarks.html');
+    wrap.innerHTML = `
+      <div class="glass-card text-center" style="max-width:500px;margin:2rem auto;padding:3rem 2rem;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">🔖</div>
+        <h3 style="font-family:var(--font-heading);color:var(--saffron-light);margin-bottom:0.6rem;">Sign In to View Saved Summaries</h3>
+        <p style="color:var(--text-muted);font-size:0.92rem;margin-bottom:1.5rem;line-height:1.7;">
+          Save your favorite Katha day summaries and Pravachans so you can quickly revisit and reflect upon them anytime.
+        </p>
+        <a href="login.html?redirect=${redirect}" class="btn btn-primary">Sign In · प्रवेश करें</a>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const res = await fetch(`api/bookmarks.php?_=${Date.now()}`);
+    const bookmarks = await res.json();
+
+    if (!Array.isArray(bookmarks) || bookmarks.length === 0) {
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔖</div>
+          <h3>No Saved Summaries Yet</h3>
+          <p>Click the bookmark button on any Katha summary or Pravachan to save it here for easy reflection.</p>
+          <div style="margin-top:1.5rem;">
+            <a href="kathas.html" class="btn btn-primary">Explore Kathas</a>
+            <a href="pravachans.html" class="btn btn-outline" style="margin-left:0.8rem;">Explore Pravachans</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="post-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;">
+        ${bookmarks.map(post => {
+          const isLecture = post.post_type === 'lecture' || !post.day_id;
+          const excerpt = post.meta_description || stripHtml(post.content).slice(0, 130) + '…';
+          return `
+            <div class="glass-card post-card reveal" id="bookmark-card-${post.id}" style="display:flex;flex-direction:column;justify-content:space-between;position:relative;">
+              <div>
+                <div class="post-card-tags" style="margin-bottom:0.8rem;">
+                  <span class="tag" style="background:rgba(212,135,42,0.1);color:var(--saffron-light);">
+                    ${isLecture ? '🎙️ Pravachan' : '🪷 Katha Day'}
+                  </span>
+                  ${post.event_location ? `<span class="tag" style="background:rgba(212,135,42,0.06);color:var(--text-muted);">📍 ${escapeHtml(post.event_location)}</span>` : ''}
+                </div>
+                <h3 class="post-card-title" style="margin-bottom:0.6rem;">
+                  <a href="post.html?slug=${post.slug}" style="text-decoration:none;color:inherit;">${escapeHtml(post.title)}</a>
+                </h3>
+                <p class="post-card-excerpt" style="font-size:0.88rem;color:var(--text-muted);line-height:1.6;">${excerpt}</p>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--glass-border);">
+                <a href="post.html?slug=${post.slug}" class="btn btn-sm btn-outline" style="font-size:0.8rem;">Read Summary →</a>
+                <button class="btn-ghost" title="Remove from bookmarks" onclick="removeBookmark(${post.id})" style="color:var(--text-muted);padding:6px 10px;font-size:0.8rem;border:1px solid var(--glass-border);border-radius:var(--radius-sm);cursor:pointer;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg> Remove
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    initScrollReveal();
+
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty-state"><h3>Failed to load saved summaries</h3><p>Please try refreshing the page.</p></div>`;
+  }
+}
+
+window.removeBookmark = async function(postId) {
+  try {
+    const res = await fetch('api/bookmarks.php?action=toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post_id: postId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Removed from saved summaries.');
+      const card = document.getElementById(`bookmark-card-${postId}`);
+      if (card) {
+        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          card.remove();
+          if (!document.querySelector('#bookmarks-wrap .post-card')) {
+            initBookmarksPage();
+          }
+        }, 300);
+      }
+    }
+  } catch (err) {
+    showToast('Failed to remove bookmark.');
+  }
+};
 
 /* --- ABOUT PAGE --- */
 function initAboutPage() {
@@ -768,8 +1174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNavbar();
   initLotusParticles();
   
-  // Wait for dynamic API data
-  await Data.load();
+  // Wait for dynamic API data and devotee authentication state
+  await Promise.all([Data.load(), initUserAuth()]);
 
   // Populate footer saptahs if element exists
   const footerUl = document.getElementById('footer-saptahs');
@@ -787,6 +1193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (body === 'post')       initPostPage();
   if (body === 'about')      initAboutPage();
   if (body === 'quotes')     initQuotesPage();
+  if (body === 'bookmarks')  initBookmarksPage();
 
   // Init scroll reveal after DOM elements are created
   initScrollReveal();
