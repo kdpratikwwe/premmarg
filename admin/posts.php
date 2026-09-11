@@ -5,7 +5,11 @@ $action = $_GET['action'] ?? 'list';
 $id = $_GET['id'] ?? 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $day_id = $_POST['day_id'];
+    $post_type = $_POST['post_type'] ?? 'katha_day';
+    $day_id = ($post_type === 'lecture' || empty($_POST['day_id'])) ? null : (int)$_POST['day_id'];
+    $event_date = !empty($_POST['event_date']) ? $_POST['event_date'] : null;
+    $event_location = !empty($_POST['event_location']) ? trim($_POST['event_location']) : null;
+
     $title = $_POST['title'];
     $title_hi = $_POST['title_hi'];
     $slug = $_POST['slug'];
@@ -16,11 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'] ?? 'draft';
 
     if ($id) {
-        $stmt = $pdo->prepare('UPDATE posts SET day_id=?, title=?, title_hi=?, slug=?, content=?, content_hi=?, meta_description=?, featured=?, status=? WHERE id=?');
-        $stmt->execute([$day_id, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status, $id]);
+        $stmt = $pdo->prepare('UPDATE posts SET day_id=?, post_type=?, event_date=?, event_location=?, title=?, title_hi=?, slug=?, content=?, content_hi=?, meta_description=?, featured=?, status=? WHERE id=?');
+        $stmt->execute([$day_id, $post_type, $event_date, $event_location, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status, $id]);
     } else {
-        $stmt = $pdo->prepare('INSERT INTO posts (day_id, title, title_hi, slug, content, content_hi, meta_description, featured, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$day_id, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status]);
+        $stmt = $pdo->prepare('INSERT INTO posts (day_id, post_type, event_date, event_location, title, title_hi, slug, content, content_hi, meta_description, featured, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$day_id, $post_type, $event_date, $event_location, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status]);
     }
     echo "<script>window.location='posts.php';</script>";
     exit;
@@ -53,7 +57,7 @@ if ($action == 'delete' && $id) {
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4">ID</th>
-                        <th>Day / Saptah</th>
+                        <th>Category / Association</th>
                         <th>Title</th>
                         <th class="text-center">Featured</th>
                         <th class="text-center">Status / Preview</th>
@@ -64,18 +68,35 @@ if ($action == 'delete' && $id) {
                     <?php
                     $stmt = $pdo->query('SELECT p.*, d.day_number, d.title as day_title, s.title as saptah_title 
                                          FROM posts p 
-                                         JOIN days d ON p.day_id = d.id 
-                                         JOIN saptah s ON d.saptah_id = s.id 
+                                         LEFT JOIN days d ON p.day_id = d.id 
+                                         LEFT JOIN saptah s ON d.saptah_id = s.id 
                                          ORDER BY p.id DESC');
                     while ($row = $stmt->fetch()):
+                        $isLecture = ($row['post_type'] ?? 'katha_day') === 'lecture' || empty($row['day_id']);
                     ?>
                     <tr>
                         <td class="ps-4 fw-bold"><?= $row['id'] ?></td>
                         <td>
-                            <div class="fw-semibold"><?= htmlspecialchars($row['saptah_title']) ?></div>
-                            <small class="text-muted"><span class="badge bg-secondary">Day <?= $row['day_number'] ?></span> - <?= htmlspecialchars($row['day_title']) ?></small>
+                            <?php if ($isLecture): ?>
+                                <span class="badge" style="background:#6f42c1;color:#fff;"><i class="fas fa-microphone me-1"></i>Pravachan / Lecture</span>
+                                <?php if (!empty($row['event_location']) || !empty($row['event_date'])): ?>
+                                    <div class="small text-muted mt-1">
+                                        <?= htmlspecialchars($row['event_location'] ?? '') ?>
+                                        <?= (!empty($row['event_location']) && !empty($row['event_date'])) ? ' · ' : '' ?>
+                                        <?= htmlspecialchars($row['event_date'] ?? '') ?>
+                                    </div>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <div class="fw-semibold"><?= htmlspecialchars($row['saptah_title'] ?? '') ?></div>
+                                <small class="text-muted"><span class="badge bg-secondary">Day <?= $row['day_number'] ?? '' ?></span> - <?= htmlspecialchars($row['day_title'] ?? '') ?></small>
+                            <?php endif; ?>
                         </td>
-                        <td><?= htmlspecialchars($row['title']) ?></td>
+                        <td>
+                            <div class="fw-semibold"><?= htmlspecialchars($row['title']) ?></div>
+                            <?php if(!empty($row['title_hi'])): ?>
+                                <small class="text-muted font-hindi"><?= htmlspecialchars($row['title_hi']) ?></small>
+                            <?php endif; ?>
+                        </td>
                         <td class="text-center">
                             <?php if($row['featured']): ?>
                                 <span class="badge bg-success"><i class="fas fa-star me-1"></i>Yes</span>
@@ -128,20 +149,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.status-toggle').forEach(toggle => {
         toggle.addEventListener('change', function() {
             const postId = this.dataset.id;
-            const postSlug = this.dataset.slug;
             const isPublished = this.checked;
             const newStatus = isPublished ? 'published' : 'draft';
             const tr = this.closest('tr');
             const btn = tr.querySelector('.preview-link-btn');
 
-            // Instantly toggle preview button visibility
             if (newStatus === 'draft') {
                 btn.style.display = 'inline-block';
             } else {
                 btn.style.display = 'none';
             }
 
-            // AJAX call to update status
             const formData = new FormData();
             formData.append('id', postId);
             formData.append('status', newStatus);
@@ -154,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 if (!data.success) {
                     alert("Error: " + data.error);
-                    // Revert state
                     this.checked = !isPublished;
                     btn.style.display = isPublished ? 'none' : 'inline-block';
                 }
@@ -162,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => {
                 console.error(err);
                 alert("Network error updating status.");
-                // Revert state
                 this.checked = !isPublished;
                 btn.style.display = isPublished ? 'none' : 'inline-block';
             });
@@ -172,7 +188,20 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <?php elseif ($action == 'edit'): 
-    $post = ['day_id'=>'', 'title'=>'', 'title_hi'=>'', 'slug'=>'', 'content'=>'', 'content_hi'=>'', 'meta_description'=>'', 'featured'=>0, 'status'=>'draft'];
+    $post = [
+        'day_id'=>'', 
+        'post_type'=>'katha_day', 
+        'event_date'=>'', 
+        'event_location'=>'', 
+        'title'=>'', 
+        'title_hi'=>'', 
+        'slug'=>'', 
+        'content'=>'', 
+        'content_hi'=>'', 
+        'meta_description'=>'', 
+        'featured'=>0, 
+        'status'=>'draft'
+    ];
     if ($id) {
         $stmt = $pdo->prepare('SELECT * FROM posts WHERE id=?');
         $stmt->execute([$id]);
@@ -184,13 +213,33 @@ document.addEventListener('DOMContentLoaded', () => {
 ?>
 <div class="card border-0 shadow-sm rounded-3 p-4">
     <h5 class="fw-bold mb-4 border-bottom pb-2">
-        <i class="fas fa-edit text-primary me-2"></i><?= $id ? 'Edit Post summary' : 'Create New Post Summary' ?>
+        <i class="fas fa-edit text-primary me-2"></i><?= $id ? 'Edit Post Details' : 'Create New Post' ?>
     </h5>
     <form method="post">
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Saptah & Day</label>
-            <select name="day_id" class="form-select" required>
-                <option value="">Select Day</option>
+        <!-- Post Category / Type -->
+        <div class="card bg-light border-0 p-3 mb-4 rounded-3">
+            <label class="form-label fw-bold mb-2">Select Post Type (प्रकार चुनें)</label>
+            <div class="d-flex gap-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="post_type" id="type_katha" value="katha_day" <?= ($post['post_type'] ?? 'katha_day') === 'katha_day' ? 'checked' : '' ?> onchange="togglePostTypeFields('katha_day')">
+                    <label class="form-check-label fw-semibold" for="type_katha">
+                        🪷 Katha Day Summary (कथा सारांश)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="post_type" id="type_lecture" value="lecture" <?= ($post['post_type'] ?? '') === 'lecture' ? 'checked' : '' ?> onchange="togglePostTypeFields('lecture')">
+                    <label class="form-check-label fw-semibold" for="type_lecture">
+                        🎙️ Standalone Lecture / Pravachan (प्रवचन / उपदेश)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Katha & Day Fields -->
+        <div id="katha_fields_wrap" class="mb-3" style="<?= ($post['post_type'] ?? 'katha_day') === 'lecture' ? 'display:none;' : '' ?>">
+            <label class="form-label fw-semibold">Saptah / Katha & Day</label>
+            <select name="day_id" id="day_id_select" class="form-select">
+                <option value="">Select Katha Day</option>
                 <?php foreach($days as $d): ?>
                     <option value="<?= $d['id'] ?>" <?= $d['id']==$post['day_id']?'selected':'' ?>>
                         <?= htmlspecialchars($d['saptah_title'] . ' - Day ' . $d['day_number'] . ': ' . $d['title']) ?>
@@ -198,6 +247,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 <?php endforeach; ?>
             </select>
         </div>
+
+        <!-- Standalone Lecture Fields -->
+        <div id="lecture_fields_wrap" class="row mb-3" style="<?= ($post['post_type'] ?? 'katha_day') === 'lecture' ? '' : 'display:none;' ?>">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Lecture Date (प्रवचन दिनांक)</label>
+                <input type="date" name="event_date" class="form-control" value="<?= htmlspecialchars($post['event_date'] ?? '') ?>">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Lecture Location (स्थान, e.g., वृन्दावन धाम)</label>
+                <input type="text" name="event_location" class="form-control" placeholder="e.g. वृन्दावन धाम / बरसाना" value="<?= htmlspecialchars($post['event_location'] ?? '') ?>">
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">Title (English)</label>
@@ -238,21 +300,33 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-2"></i>Save Post Summary</button>
+            <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-2"></i>Save Post</button>
         </div>
     </form>
 </div>
+
 <script>
-    ClassicEditor
-        .create( document.querySelector( '#content_en' ) )
-        .catch( error => {
-            console.error( error );
-        } );
-    ClassicEditor
-        .create( document.querySelector( '#content_hi' ) )
-        .catch( error => {
-            console.error( error );
-        } );
+function togglePostTypeFields(type) {
+    const kathaWrap = document.getElementById('katha_fields_wrap');
+    const lectureWrap = document.getElementById('lecture_fields_wrap');
+    const daySelect = document.getElementById('day_id_select');
+
+    if (type === 'lecture') {
+        kathaWrap.style.display = 'none';
+        lectureWrap.style.display = 'flex';
+        daySelect.removeAttribute('required');
+    } else {
+        kathaWrap.style.display = 'block';
+        lectureWrap.style.display = 'none';
+    }
+}
+
+ClassicEditor
+    .create( document.querySelector( '#content_en' ) )
+    .catch( error => { console.error( error ); } );
+ClassicEditor
+    .create( document.querySelector( '#content_hi' ) )
+    .catch( error => { console.error( error ); } );
 </script>
 <?php endif; ?>
 

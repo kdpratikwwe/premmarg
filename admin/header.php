@@ -111,8 +111,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </li>
                         <li class="nav-item">
                             <a href="saptahs.php" class="nav-link <?= $current_page=='saptahs.php'?'active':'' ?>">
-                                <i class="nav-icon fas fa-book"></i>
-                                <p>Manage Saptahs</p>
+                                <i class="nav-icon fas fa-book-open"></i>
+                                <p>Manage Kathas</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -153,7 +153,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             <h3 class="mb-0">
                                 <?php
                                 if ($current_page == 'index.php') echo 'Dashboard';
-                                elseif ($current_page == 'saptahs.php') echo 'Manage Saptahs';
+                                elseif ($current_page == 'saptahs.php') echo 'Manage Kathas';
                                 elseif ($current_page == 'days.php') echo 'Manage Days';
                                 elseif ($current_page == 'posts.php') echo 'Manage Posts';
                                 elseif ($current_page == 'quotes.php') echo 'Manage Quotes';

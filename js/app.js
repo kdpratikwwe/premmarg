@@ -138,21 +138,24 @@ function buildSaptahCard(saptah) {
 
 /** Builds a Post card element */
 function buildPostCard(post, options = {}) {
-  const day  = Data.getDayForPost(post);
-  const saptah = Data.getSaptahForPost(post);
+  const isLecture = post.post_type === 'lecture' || !post.day_id;
+  const day  = isLecture ? null : Data.getDayForPost(post);
   const excerpt = post.meta_description || stripHtml(post.content).slice(0, 140) + '…';
 
   return `
     <a href="post.html?slug=${post.slug}" class="glass-card glass-card-link post-card ${options.className || ''}">
       <div class="post-card-tags">
-        ${day   ? `<span class="tag tag-day">Day ${day.day_number}</span>` : ''}
+        ${isLecture 
+          ? `<span class="tag" style="background:rgba(111,66,193,0.15);color:#d0bfff;border-color:rgba(111,66,193,0.3);font-weight:600;">🎙️ Pravachan · प्रवचन</span>`
+          : (day ? `<span class="tag tag-day">Day ${day.day_number}</span>` : '')}
+        ${post.event_location ? `<span class="tag" style="background:rgba(212,135,42,0.1);color:var(--saffron-light);">📍 ${post.event_location}</span>` : ''}
         ${post.featured ? `<span class="tag tag-featured">⭐ Featured</span>` : ''}
         ${post.content_hi ? `<span class="tag tag-hindi">हिंदी</span>` : ''}
       </div>
       <h3 class="post-card-title">${post.title}</h3>
       <p class="post-card-excerpt">${excerpt}</p>
       <span class="post-card-read">
-        Read Summary
+        ${isLecture ? 'Read Pravachan' : 'Read Summary'}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </span>
     </a>`;
@@ -235,6 +238,10 @@ function renderHeroLatestSaptah() {
   wrap.querySelector('.strip-saptah-title-hi').textContent = saptah.title_hi;
   wrap.querySelector('.strip-saptah-loc').innerHTML      = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ` + saptah.location;
   wrap.querySelector('.strip-saptah-year').textContent     = saptah.year;
+
+  const isTridivasiya = saptah.katha_type === 'tridivasiya' || saptah.total_days == 3;
+  const sectionLabel = wrap.querySelector('.section-label');
+  if (sectionLabel) sectionLabel.textContent = isTridivasiya ? 'Current Katha (त्रिदिवसीय)' : 'Current Katha Saptah';
   
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
@@ -371,6 +378,16 @@ function initKathaPage() {
   const locTag = document.getElementById('katha-loc-tag');
   if (locTag) locTag.textContent = '📍 ' + saptah.location;
 
+  const isTridivasiya = saptah.katha_type === 'tridivasiya' || saptah.total_days == 3;
+  const durEl = document.getElementById('katha-duration');
+  if (durEl) {
+    durEl.textContent = isTridivasiya ? '3 Days Katha (त्रिदिवसीय कथा)' : `${saptah.total_days || 7} Days Saptah (सप्ताह)`;
+  }
+  const typeTag = document.getElementById('katha-type-tag');
+  if (typeTag) {
+    typeTag.textContent = isTridivasiya ? 'त्रिदिवसीय कथा' : 'सप्ताह';
+  }
+
   // Days timeline
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
@@ -428,8 +445,9 @@ function initPostPage() {
   const post = Data.getPost(slug);
   if (!post) { window.location.href = 'index.html'; return; }
 
-  const day    = Data.getDayForPost(post);
-  const saptah = Data.getSaptahForPost(post);
+  const isLecture = post.post_type === 'lecture' || !post.day_id;
+  const day    = isLecture ? null : Data.getDayForPost(post);
+  const saptah = isLecture ? null : Data.getSaptahForPost(post);
   const { prev, next } = Data.getAdjacentPosts(post);
 
   // Meta
@@ -438,24 +456,38 @@ function initPostPage() {
 
   // Breadcrumb
   const bc = document.getElementById('post-breadcrumb');
-  if (bc && saptah) {
+  if (bc) {
     const urlParams = new URLSearchParams(window.location.search);
     const isPreview = urlParams.get('preview') === '1';
     const previewParam = isPreview ? '&preview=1' : '';
 
-    bc.innerHTML = `
-      <a href="index.html">Home</a><span class="sep">›</span>
-      <a href="kathas.html">Kathas</a><span class="sep">›</span>
-      <a href="katha.html?slug=${saptah.slug}${previewParam}">${saptah.title}</a><span class="sep">›</span>
-      <span style="color:var(--text-secondary)">Day ${day?.day_number}</span>`;
+    if (isLecture) {
+      bc.innerHTML = `
+        <a href="index.html">Home</a><span class="sep">›</span>
+        <a href="pravachans.html">Pravachans</a><span class="sep">›</span>
+        <span style="color:var(--text-secondary)">${post.title}</span>`;
+    } else if (saptah) {
+      bc.innerHTML = `
+        <a href="index.html">Home</a><span class="sep">›</span>
+        <a href="kathas.html">Kathas</a><span class="sep">›</span>
+        <a href="katha.html?slug=${saptah.slug}${previewParam}">${saptah.title}</a><span class="sep">›</span>
+        <span style="color:var(--text-secondary)">Day ${day?.day_number || ''}</span>`;
+    }
   }
 
   // Tags
   const tagsEl = document.getElementById('post-tags');
   if (tagsEl) {
-    tagsEl.innerHTML = `
-      ${day ? `<span class="tag tag-day">Day ${day.day_number} · ${day.title_hi || day.title}</span>` : ''}
-      ${post.featured ? `<span class="tag tag-featured">⭐ Featured</span>` : ''}`;
+    if (isLecture) {
+      tagsEl.innerHTML = `
+        <span class="tag" style="background:rgba(111,66,193,0.15);color:#d0bfff;border-color:rgba(111,66,193,0.3);font-weight:600;">🎙️ Pravachan · प्रवचन</span>
+        ${post.event_location ? `<span class="tag" style="background:rgba(212,135,42,0.1);color:var(--saffron-light);">📍 ${post.event_location}</span>` : ''}
+        ${post.featured ? `<span class="tag tag-featured">⭐ Featured</span>` : ''}`;
+    } else {
+      tagsEl.innerHTML = `
+        ${day ? `<span class="tag tag-day">Day ${day.day_number} · ${day.title_hi || day.title}</span>` : ''}
+        ${post.featured ? `<span class="tag tag-featured">⭐ Featured</span>` : ''}`;
+    }
   }
 
   // Title
@@ -464,7 +496,7 @@ function initPostPage() {
 
   // Date
   const dateEl = document.getElementById('post-date');
-  if (dateEl) dateEl.textContent = Data.formatDate(post.created_at);
+  if (dateEl) dateEl.textContent = Data.formatDate(post.event_date || post.created_at);
 
   // Content
   const enEl = document.getElementById('content-en');
@@ -545,6 +577,10 @@ function initPostPage() {
     if (prev) {
       prevEl.href = `post.html?slug=${prev.slug}`;
       prevEl.querySelector('.post-nav-title').textContent = prev.title;
+      const prevDir = prevEl.querySelector('.post-nav-dir');
+      if (prevDir) {
+        prevDir.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> ${isLecture ? 'Previous Pravachan' : 'Previous Day'}`;
+      }
     } else {
       prevEl.style.visibility = 'hidden';
     }
@@ -553,6 +589,10 @@ function initPostPage() {
     if (next) {
       nextEl.href = `post.html?slug=${next.slug}`;
       nextEl.querySelector('.post-nav-title').textContent = next.title;
+      const nextDir = nextEl.querySelector('.post-nav-dir');
+      if (nextDir) {
+        nextDir.innerHTML = `${isLecture ? 'Next Pravachan' : 'Next Day'} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+      }
     } else {
       nextEl.style.visibility = 'hidden';
     }
@@ -687,6 +727,41 @@ window.copyQuoteToClipboard = function(btn, encodedText) {
   });
 };
 
+/* --- PRAVACHANS PAGE --- */
+function initPravachansPage() {
+  const wrap = document.getElementById('pravachans-wrap');
+  const search = document.getElementById('pravachans-search');
+  if (!wrap) return;
+
+  const lectures = Data.getLectures();
+
+  function render(list) {
+    if (list.length === 0) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🎙️</div><h3>No Pravachans Found</h3><p>Discourses and lectures will appear here soon.</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `<div class="post-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;max-width:1200px;margin:0 auto;padding:0 2.5rem;">
+      ${list.map((p, i) => `<div class="reveal reveal-delay-${Math.min(i+1, 4)}">${buildPostCard(p)}</div>`).join('')}
+    </div>`;
+    initScrollReveal();
+  }
+
+  render(lectures);
+
+  if (search) {
+    search.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = lectures.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        (p.title_hi && p.title_hi.toLowerCase().includes(q)) ||
+        (p.event_location && p.event_location.toLowerCase().includes(q)) ||
+        (p.content && p.content.toLowerCase().includes(q))
+      );
+      render(filtered);
+    });
+  }
+}
+
 /* ===== BOOTSTRAP ===== */
 document.addEventListener('DOMContentLoaded', async () => {
   initThemeToggle();
@@ -705,12 +780,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const body = document.body.dataset.page;
-  if (body === 'home')   initHomePage();
-  if (body === 'kathas') initKathasPage();
-  if (body === 'katha')  initKathaPage();
-  if (body === 'post')   initPostPage();
-  if (body === 'about')  initAboutPage();
-  if (body === 'quotes') initQuotesPage();
+  if (body === 'home')       initHomePage();
+  if (body === 'kathas')     initKathasPage();
+  if (body === 'pravachans') initPravachansPage();
+  if (body === 'katha')      initKathaPage();
+  if (body === 'post')       initPostPage();
+  if (body === 'about')      initAboutPage();
+  if (body === 'quotes')     initQuotesPage();
 
   // Init scroll reveal after DOM elements are created
   initScrollReveal();

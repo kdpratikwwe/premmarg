@@ -35,6 +35,8 @@ const Data = {
   getPostsForDay: (dayId) => DB.posts.filter(p => parseInt(p.day_id) === parseInt(dayId)).sort((a,b) => new Date(a.created_at) - new Date(b.created_at)),
   getFeatured: () => DB.posts.filter(p => parseInt(p.featured) === 1).sort((a,b) => new Date(b.created_at) - new Date(a.created_at)),
   getPost: (slug) => DB.posts.find(p => p.slug === slug),
+  getLectures: () => DB.posts.filter(p => (p.post_type === 'lecture' || !p.day_id)).sort((a,b) => new Date(b.event_date || b.created_at) - new Date(a.event_date || a.created_at)),
+  getKathaPosts: () => DB.posts.filter(p => p.post_type !== 'lecture' && p.day_id),
   
   getPosts: (filter) => {
     let posts = DB.posts;
@@ -46,11 +48,12 @@ const Data = {
   },
   
   getDayForPost: (post) => {
-    if (!post) return null;
+    if (!post || !post.day_id) return null;
     return DB.days.find(d => parseInt(d.id) === parseInt(post.day_id));
   },
   
   getSaptahForPost: (post) => {
+    if (!post || !post.day_id) return null;
     const day = Data.getDayForPost(post);
     if (!day) return null;
     return DB.saptahs.find(s => parseInt(s.id) === parseInt(day.saptah_id));
@@ -58,6 +61,17 @@ const Data = {
   
   getAdjacentPosts: (post) => {
     if (!post) return { prev: null, next: null };
+    
+    // If lecture, link adjacent lectures
+    if (post.post_type === 'lecture' || !post.day_id) {
+      const lectures = Data.getLectures();
+      const idx = lectures.findIndex(p => p.id === post.id);
+      return {
+        prev: idx > 0 ? lectures[idx - 1] : null,
+        next: idx < lectures.length - 1 ? lectures[idx + 1] : null
+      };
+    }
+
     const saptah = Data.getSaptahForPost(post);
     if (!saptah) return { prev: null, next: null };
     
