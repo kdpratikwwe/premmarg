@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $day_id = ($post_type === 'lecture' || empty($_POST['day_id'])) ? null : (int)$_POST['day_id'];
     $event_date = !empty($_POST['event_date']) ? $_POST['event_date'] : null;
     $event_location = !empty($_POST['event_location']) ? trim($_POST['event_location']) : null;
+    $youtube_url = !empty($_POST['youtube_url']) ? trim($_POST['youtube_url']) : null;
 
     $title = $_POST['title'];
     $title_hi = $_POST['title_hi'];
@@ -20,11 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'] ?? 'draft';
 
     if ($id) {
-        $stmt = $pdo->prepare('UPDATE posts SET day_id=?, post_type=?, event_date=?, event_location=?, title=?, title_hi=?, slug=?, content=?, content_hi=?, meta_description=?, featured=?, status=? WHERE id=?');
-        $stmt->execute([$day_id, $post_type, $event_date, $event_location, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status, $id]);
+        $stmt = $pdo->prepare('UPDATE posts SET day_id=?, post_type=?, event_date=?, event_location=?, youtube_url=?, title=?, title_hi=?, slug=?, content=?, content_hi=?, meta_description=?, featured=?, status=? WHERE id=?');
+        $stmt->execute([$day_id, $post_type, $event_date, $event_location, $youtube_url, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status, $id]);
     } else {
-        $stmt = $pdo->prepare('INSERT INTO posts (day_id, post_type, event_date, event_location, title, title_hi, slug, content, content_hi, meta_description, featured, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$day_id, $post_type, $event_date, $event_location, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status]);
+        $stmt = $pdo->prepare('INSERT INTO posts (day_id, post_type, event_date, event_location, youtube_url, title, title_hi, slug, content, content_hi, meta_description, featured, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$day_id, $post_type, $event_date, $event_location, $youtube_url, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status]);
     }
     echo "<script>window.location='posts.php';</script>";
     exit;
@@ -92,7 +93,14 @@ if ($action == 'delete' && $id) {
                             <?php endif; ?>
                         </td>
                         <td>
-                            <div class="fw-semibold"><?= htmlspecialchars($row['title']) ?></div>
+                            <div class="fw-semibold">
+                                <?= htmlspecialchars($row['title']) ?>
+                                <?php if(!empty($row['youtube_url'])): ?>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 ms-1" title="YouTube Video Attached: <?= htmlspecialchars($row['youtube_url']) ?>">
+                                        <i class="fab fa-youtube me-1"></i>Video
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                             <?php if(!empty($row['title_hi'])): ?>
                                 <small class="text-muted font-hindi"><?= htmlspecialchars($row['title_hi']) ?></small>
                             <?php endif; ?>
@@ -193,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'post_type'=>'katha_day', 
         'event_date'=>'', 
         'event_location'=>'', 
+        'youtube_url'=>'',
         'title'=>'', 
         'title_hi'=>'', 
         'slug'=>'', 
@@ -279,6 +288,20 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="text" name="meta_description" class="form-control" value="<?= htmlspecialchars($post['meta_description']) ?>">
         </div>
         <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="fab fa-youtube text-danger me-1"></i> YouTube Video Link (यूट्यूब लिंक - वैकल्पिक)
+            </label>
+            <input type="url" name="youtube_url" id="youtube_url" class="form-control" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." value="<?= htmlspecialchars($post['youtube_url'] ?? '') ?>" oninput="previewYoutubeVideo(this.value)">
+            <div class="form-text text-muted">
+                Paste any YouTube video or live stream link for this Katha Day / Pravachan. An embedded player will automatically appear on the blog post.
+            </div>
+            <div id="yt_preview_wrap" class="mt-2" style="display:none; max-width: 460px;">
+                <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm border border-secondary border-opacity-25">
+                    <iframe id="yt_preview_iframe" src="" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
             <label class="form-label fw-semibold">Content (English)</label>
             <textarea name="content" id="content_en" class="form-control"><?= htmlspecialchars($post['content']) ?></textarea>
         </div>
@@ -320,6 +343,34 @@ function togglePostTypeFields(type) {
         lectureWrap.style.display = 'none';
     }
 }
+
+function extractYTId(url) {
+    if (!url) return null;
+    url = url.trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+    const match = url.match(/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+}
+
+function previewYoutubeVideo(url) {
+    const wrap = document.getElementById('yt_preview_wrap');
+    const iframe = document.getElementById('yt_preview_iframe');
+    const videoId = extractYTId(url);
+    if (videoId) {
+        iframe.src = 'https://www.youtube-nocookie.com/embed/' + videoId;
+        wrap.style.display = 'block';
+    } else {
+        iframe.src = '';
+        wrap.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const ytInput = document.getElementById('youtube_url');
+    if (ytInput && ytInput.value) {
+        previewYoutubeVideo(ytInput.value);
+    }
+});
 
 ClassicEditor
     .create( document.querySelector( '#content_en' ) )

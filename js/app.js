@@ -154,6 +154,7 @@ function buildPostCard(post, options = {}) {
           : (day ? `<span class="tag tag-day">Day ${day.day_number}</span>` : '')}
         ${post.event_location ? `<span class="tag" style="background:rgba(212,135,42,0.1);color:var(--saffron-light);">📍 ${post.event_location}</span>` : ''}
         ${post.featured ? `<span class="tag tag-featured">⭐ Featured</span>` : ''}
+        ${post.youtube_url ? `<span class="tag" style="background:rgba(235,50,35,0.12);color:#ff7875;border-color:rgba(235,50,35,0.25);font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px;margin-right:3px;"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>Video</span>` : ''}
         ${post.content_hi ? `<span class="tag tag-hindi">हिंदी</span>` : ''}
       </div>
       <h3 class="post-card-title">${post.title}</h3>
@@ -163,6 +164,15 @@ function buildPostCard(post, options = {}) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </span>
     </a>`;
+}
+
+/** Extract YouTube Video ID from any standard URL or ID string */
+function getYouTubeVideoId(url) {
+  if (!url) return null;
+  url = url.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+  const match = url.match(/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
 }
 
 /** Strip HTML tags */
@@ -646,6 +656,20 @@ function initPostPage() {
   // Date
   const dateEl = document.getElementById('post-date');
   if (dateEl) dateEl.textContent = Data.formatDate(post.event_date || post.created_at);
+
+  // YouTube Video Player
+  const videoWrap = document.getElementById('post-video-wrap');
+  const videoIframe = document.getElementById('post-video-iframe');
+  if (videoWrap && videoIframe) {
+    const videoId = getYouTubeVideoId(post.youtube_url);
+    if (videoId) {
+      videoIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+      videoWrap.style.display = 'block';
+    } else {
+      videoIframe.src = '';
+      videoWrap.style.display = 'none';
+    }
+  }
 
   // Content
   const enEl = document.getElementById('content-en');
