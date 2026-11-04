@@ -4,6 +4,28 @@ require_once 'header.php';
 $action = $_GET['action'] ?? 'list';
 $id = $_GET['id'] ?? 0;
 
+// Fetch all Kathas for dropdown filters
+$saptahs = $pdo->query('SELECT id, title, year FROM saptah ORDER BY year DESC, id DESC')->fetchAll();
+
+// Resolve selected Katha filter
+$selected_saptah_id = null;
+if (isset($_GET['saptah_id'])) {
+    $selected_saptah_id = in_array($_GET['saptah_id'], ['all', 'lectures']) ? $_GET['saptah_id'] : (int)$_GET['saptah_id'];
+} else {
+    // Default to the latest Katha if available
+    $selected_saptah_id = !empty($saptahs) ? $saptahs[0]['id'] : 'all';
+}
+
+$current_saptah = null;
+if (!in_array($selected_saptah_id, ['all', 'lectures'])) {
+    foreach ($saptahs as $s) {
+        if ($s['id'] == $selected_saptah_id) {
+            $current_saptah = $s;
+            break;
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $post_type = $_POST['post_type'] ?? 'katha_day';
     $day_id = ($post_type === 'lecture' || empty($_POST['day_id'])) ? null : (int)$_POST['day_id'];
@@ -27,30 +49,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare('INSERT INTO posts (day_id, post_type, event_date, event_location, youtube_url, title, title_hi, slug, content, content_hi, meta_description, featured, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([$day_id, $post_type, $event_date, $event_location, $youtube_url, $title, $title_hi, $slug, $content, $content_hi, $meta_description, $featured, $status]);
     }
-    echo "<script>window.location='posts.php';</script>";
+
+    $redirUrl = 'posts.php';
+    if ($day_id) {
+        $dStmt = $pdo->prepare('SELECT saptah_id FROM days WHERE id=?');
+        $dStmt->execute([$day_id]);
+        $dRow = $dStmt->fetch();
+        if ($dRow && !empty($dRow['saptah_id'])) {
+            $redirUrl = 'posts.php?saptah_id=' . $dRow['saptah_id'];
+        }
+    } elseif ($post_type === 'lecture') {
+        $redirUrl = 'posts.php?saptah_id=lectures';
+    }
+    echo "<script>window.location='{$redirUrl}';</script>";
     exit;
 }
 
 if ($action == 'delete' && $id) {
+    $pStmt = $pdo->prepare('SELECT p.post_type, d.saptah_id FROM posts p LEFT JOIN days d ON p.day_id = d.id WHERE p.id=?');
+    $pStmt->execute([$id]);
+    $delPost = $pStmt->fetch();
+    $redirUrl = 'posts.php';
+    if ($delPost) {
+        if (!empty($delPost['saptah_id'])) {
+            $redirUrl = 'posts.php?saptah_id=' . $delPost['saptah_id'];
+        } elseif (($delPost['post_type'] ?? '') === 'lecture') {
+            $redirUrl = 'posts.php?saptah_id=lectures';
+        }
+    }
+
     $pdo->prepare('DELETE FROM posts WHERE id=?')->execute([$id]);
-    echo "<script>window.location='posts.php';</script>";
+    echo "<script>window.location='{$redirUrl}';</script>";
     exit;
 }
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0 fw-bold">Manage Posts</h4>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 fw-bold">Manage Posts</h4>
+        <p class="text-muted small mb-0">Publish and manage day summaries and standalone pravachans.</p>
+    </div>
     <?php if($action == 'list'): ?>
-        <a href="?action=edit" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add New Post</a>
+        <a href="?action=edit<?= (!in_array($selected_saptah_id, ['all', 'lectures']) ? '&saptah_id='.$selected_saptah_id : '') ?>" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Post
+        </a>
     <?php else: ?>
-        <a href="posts.php" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-2"></i>Back to List</a>
+        <a href="posts.php<?= (!in_array($selected_saptah_id, ['all', 'lectures']) ? '?saptah_id='.$selected_saptah_id : '') ?>" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
     <?php endif; ?>
 </div>
 
-<?php if ($action == 'list'): ?>
+<?php if ($action == 'list'): 
+    // Query posts based on selected filter
+    if ($selected_saptah_id === 'lectures') {
+        $stmt = $pdo->query('SELECT p.*, d.day_number, d.title as day_title, s.title as saptah_title 
+                             FROM posts p 
+                             LEFT JOIN days d ON p.day_id = d.id 
+                             LEFT JOIN saptah s ON d.saptah_id = s.id 
+                             WHERE p.post_type = "lecture" OR p.day_id IS NULL 
+                             ORDER BY p.id DESC');
+    } elseif ($selected_saptah_id === 'all') {
+        $stmt = $pdo->query('SELECT p.*, d.day_number, d.title as day_title, s.title as saptah_title 
+                             FROM posts p 
+                             LEFT JOIN days d ON p.day_id = d.id 
+                             LEFT JOIN saptah s ON d.saptah_id = s.id 
+                             ORDER BY p.id DESC');
+    } else {
+        $stmt = $pdo->prepare('SELECT p.*, d.day_number, d.title as day_title, s.title as saptah_title 
+                               FROM posts p 
+                               JOIN days d ON p.day_id = d.id 
+                               JOIN saptah s ON d.saptah_id = s.id 
+                               WHERE d.saptah_id = ? 
+                               ORDER BY d.day_number ASC, p.id ASC');
+        $stmt->execute([$selected_saptah_id]);
+    }
+    $posts_list = $stmt->fetchAll();
+?>
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-header bg-body-secondary py-3 border-0">
-        <h5 class="card-title mb-0 fw-bold"><i class="fas fa-file-alt me-2 text-primary"></i>Post List</h5>
+        <div class="row g-2 align-items-center">
+            <div class="col-md-5 d-flex align-items-center gap-2">
+                <h5 class="card-title mb-0 fw-bold"><i class="fas fa-file-alt me-2 text-primary"></i>Post List</h5>
+                <?php if ($current_saptah): ?>
+                    <span class="badge bg-primary px-2.5 py-1.5"><?= htmlspecialchars($current_saptah['title']) ?> (<?= $current_saptah['year'] ?>)</span>
+                <?php elseif ($selected_saptah_id === 'lectures'): ?>
+                    <span class="badge" style="background:#6f42c1;color:#fff;">Pravachan / Lectures</span>
+                <?php else: ?>
+                    <span class="badge bg-secondary px-2.5 py-1.5">All Posts</span>
+                <?php endif; ?>
+            </div>
+            <div class="col-md-7 d-flex justify-content-md-end align-items-center gap-2">
+                <label for="filter_saptah_posts" class="form-label mb-0 fw-semibold text-muted small text-nowrap">
+                    <i class="fas fa-filter text-primary me-1"></i>Select Katha:
+                </label>
+                <select id="filter_saptah_posts" class="form-select form-select-sm" style="max-width: 330px;" onchange="window.location.href='posts.php?saptah_id=' + this.value">
+                    <optgroup label="Kathas (कथा संग्रह)">
+                        <?php foreach ($saptahs as $s): ?>
+                            <option value="<?= $s['id'] ?>" <?= $selected_saptah_id == $s['id'] ? 'selected' : '' ?>>
+                                🪷 <?= htmlspecialchars($s['title']) ?> (<?= $s['year'] ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </optgroup>
+                    <optgroup label="Other Views">
+                        <option value="lectures" <?= $selected_saptah_id === 'lectures' ? 'selected' : '' ?>>🎙️ Standalone Lectures / Pravachan</option>
+                        <option value="all" <?= $selected_saptah_id === 'all' ? 'selected' : '' ?>>📋 All Posts (सभी पोस्ट्स)</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -66,75 +173,82 @@ if ($action == 'delete' && $id) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $stmt = $pdo->query('SELECT p.*, d.day_number, d.title as day_title, s.title as saptah_title 
-                                         FROM posts p 
-                                         LEFT JOIN days d ON p.day_id = d.id 
-                                         LEFT JOIN saptah s ON d.saptah_id = s.id 
-                                         ORDER BY p.id DESC');
-                    while ($row = $stmt->fetch()):
-                        $isLecture = ($row['post_type'] ?? 'katha_day') === 'lecture' || empty($row['day_id']);
-                    ?>
+                    <?php if (empty($posts_list)): ?>
                     <tr>
-                        <td class="ps-4 fw-bold"><?= $row['id'] ?></td>
-                        <td>
-                            <?php if ($isLecture): ?>
-                                <span class="badge" style="background:#6f42c1;color:#fff;"><i class="fas fa-microphone me-1"></i>Pravachan / Lecture</span>
-                                <?php if (!empty($row['event_location']) || !empty($row['event_date'])): ?>
-                                    <div class="small text-muted mt-1">
-                                        <?= htmlspecialchars($row['event_location'] ?? '') ?>
-                                        <?= (!empty($row['event_location']) && !empty($row['event_date'])) ? ' · ' : '' ?>
-                                        <?= htmlspecialchars($row['event_date'] ?? '') ?>
-                                    </div>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <div class="fw-semibold"><?= htmlspecialchars($row['saptah_title'] ?? '') ?></div>
-                                <small class="text-muted"><span class="badge bg-secondary">Day <?= $row['day_number'] ?? '' ?></span> - <?= htmlspecialchars($row['day_title'] ?? '') ?></small>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <div class="fw-semibold">
-                                <?= htmlspecialchars($row['title']) ?>
-                                <?php if(!empty($row['youtube_url'])): ?>
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 ms-1" title="YouTube Video Attached: <?= htmlspecialchars($row['youtube_url']) ?>">
-                                        <i class="fab fa-youtube me-1"></i>Video
-                                    </span>
-                                <?php endif; ?>
-                            </div>
-                            <?php if(!empty($row['title_hi'])): ?>
-                                <small class="text-muted font-hindi"><?= htmlspecialchars($row['title_hi']) ?></small>
-                            <?php endif; ?>
-                        </td>
-                        <td class="text-center">
-                            <?php if($row['featured']): ?>
-                                <span class="badge bg-success"><i class="fas fa-star me-1"></i>Yes</span>
-                            <?php else: ?>
-                                <span class="badge bg-light text-dark">No</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <div class="form-check form-switch mb-0">
-                                    <input class="form-check-input status-toggle" type="checkbox" role="switch" 
-                                           data-id="<?= $row['id'] ?>" 
-                                           data-slug="<?= htmlspecialchars($row['slug']) ?>"
-                                           <?= ($row['status'] ?? 'published') == 'published' ? 'checked' : '' ?>
-                                           title="Toggle Status (Checked = Published, Unchecked = Draft)">
-                                </div>
-                                <button class="btn btn-outline-secondary btn-sm ms-2 preview-link-btn" 
-                                        onclick="copyPreviewLink('<?= htmlspecialchars($row['slug']) ?>')" 
-                                        title="Copy Review Link"
-                                        style="display: <?= ($row['status'] ?? 'published') == 'draft' ? 'inline-block' : 'none' ?>;">
-                                    <i class="fas fa-link"></i>
-                                </button>
-                            </div>
-                        </td>
-                        <td class="text-center pe-4">
-                            <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm me-1" title="Edit Post"><i class="fas fa-edit"></i></a>
-                            <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this post?')" title="Delete Post"><i class="fas fa-trash"></i></a>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-file-signature fa-3x text-secondary opacity-50 mb-3 d-block"></i>
+                            <h6 class="fw-bold mb-1">No Posts Found</h6>
+                            <p class="small mb-3">No posts have been published under this category yet.</p>
+                            <a href="?action=edit<?= (!in_array($selected_saptah_id, ['all', 'lectures']) ? '&saptah_id='.$selected_saptah_id : '') ?>" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add New Post
+                            </a>
                         </td>
                     </tr>
-                    <?php endwhile; ?>
+                    <?php else: ?>
+                        <?php foreach ($posts_list as $row): 
+                            $isLecture = ($row['post_type'] ?? 'katha_day') === 'lecture' || empty($row['day_id']);
+                        ?>
+                        <tr>
+                            <td class="ps-4 fw-bold"><?= $row['id'] ?></td>
+                            <td>
+                                <?php if ($isLecture): ?>
+                                    <span class="badge" style="background:#6f42c1;color:#fff;"><i class="fas fa-microphone me-1"></i>Pravachan / Lecture</span>
+                                    <?php if (!empty($row['event_location']) || !empty($row['event_date'])): ?>
+                                        <div class="small text-muted mt-1">
+                                            <?= htmlspecialchars($row['event_location'] ?? '') ?>
+                                            <?= (!empty($row['event_location']) && !empty($row['event_date'])) ? ' · ' : '' ?>
+                                            <?= htmlspecialchars($row['event_date'] ?? '') ?>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <div class="fw-semibold"><?= htmlspecialchars($row['saptah_title'] ?? '') ?></div>
+                                    <small class="text-muted"><span class="badge bg-secondary">Day <?= $row['day_number'] ?? '' ?></span> - <?= htmlspecialchars($row['day_title'] ?? '') ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">
+                                    <?= htmlspecialchars($row['title']) ?>
+                                    <?php if(!empty($row['youtube_url'])): ?>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 ms-1" title="YouTube Video Attached: <?= htmlspecialchars($row['youtube_url']) ?>">
+                                            <i class="fab fa-youtube me-1"></i>Video
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if(!empty($row['title_hi'])): ?>
+                                    <small class="text-muted font-hindi"><?= htmlspecialchars($row['title_hi']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <?php if($row['featured']): ?>
+                                    <span class="badge bg-success"><i class="fas fa-star me-1"></i>Yes</span>
+                                <?php else: ?>
+                                    <span class="badge bg-light text-dark">No</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input status-toggle" type="checkbox" role="switch" 
+                                               data-id="<?= $row['id'] ?>" 
+                                               data-slug="<?= htmlspecialchars($row['slug']) ?>"
+                                               <?= ($row['status'] ?? 'published') == 'published' ? 'checked' : '' ?>
+                                               title="Toggle Status (Checked = Published, Unchecked = Draft)">
+                                    </div>
+                                    <button class="btn btn-outline-secondary btn-sm ms-2 preview-link-btn" 
+                                            onclick="copyPreviewLink('<?= htmlspecialchars($row['slug']) ?>')" 
+                                            title="Copy Review Link"
+                                            style="display: <?= ($row['status'] ?? 'published') == 'draft' ? 'inline-block' : 'none' ?>;">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td class="text-center pe-4">
+                                <a href="?action=edit&id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm me-1" title="Edit Post"><i class="fas fa-edit"></i></a>
+                                <a href="?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this post?')" title="Delete Post"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -216,9 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
         $stmt->execute([$id]);
         $post = $stmt->fetch() ?: $post;
     }
-    $days = $pdo->query('SELECT d.id, d.day_number, d.title, s.title as saptah_title 
+    $days = $pdo->query('SELECT d.id, d.day_number, d.title, d.saptah_id, s.title as saptah_title, s.year 
                          FROM days d JOIN saptah s ON d.saptah_id = s.id 
-                         ORDER BY s.year DESC, d.day_number ASC')->fetchAll();
+                         ORDER BY s.year DESC, s.id DESC, d.day_number ASC')->fetchAll();
 ?>
 <div class="card border-0 shadow-sm rounded-3 p-4">
     <h5 class="fw-bold mb-4 border-bottom pb-2">
@@ -249,10 +363,21 @@ document.addEventListener('DOMContentLoaded', () => {
             <label class="form-label fw-semibold">Saptah / Katha & Day</label>
             <select name="day_id" id="day_id_select" class="form-select">
                 <option value="">Select Katha Day</option>
-                <?php foreach($days as $d): ?>
-                    <option value="<?= $d['id'] ?>" <?= $d['id']==$post['day_id']?'selected':'' ?>>
-                        <?= htmlspecialchars($d['saptah_title'] . ' - Day ' . $d['day_number'] . ': ' . $d['title']) ?>
-                    </option>
+                <?php 
+                $groupedDays = [];
+                foreach($days as $d) {
+                    $key = $d['saptah_title'] . ' (' . $d['year'] . ')';
+                    $groupedDays[$key][] = $d;
+                }
+                foreach($groupedDays as $kathaName => $kDays):
+                ?>
+                    <optgroup label="🪷 <?= htmlspecialchars($kathaName) ?>">
+                        <?php foreach($kDays as $d): ?>
+                            <option value="<?= $d['id'] ?>" <?= $d['id']==$post['day_id']?'selected':'' ?>>
+                                Day <?= $d['day_number'] ?>: <?= htmlspecialchars($d['title']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </optgroup>
                 <?php endforeach; ?>
             </select>
         </div>
