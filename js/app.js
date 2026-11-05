@@ -594,6 +594,8 @@ function initKathaPage() {
       sideWrap.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">Posts coming soon…</p>`;
     }
   }
+}
+
 /* ===== KATHA TIMESTAMP & VIDEO SEEK ENGINE ===== */
 
 /** Converts time strings (e.g. 03:15, 14:30, 1:05:40) to total seconds */
