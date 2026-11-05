@@ -594,7 +594,167 @@ function initKathaPage() {
       sideWrap.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">Posts coming soon…</p>`;
     }
   }
+/* ===== KATHA TIMESTAMP & VIDEO SEEK ENGINE ===== */
+
+/** Converts time strings (e.g. 03:15, 14:30, 1:05:40) to total seconds */
+function timeStringToSeconds(timeStr) {
+  if (!timeStr) return 0;
+  const parts = timeStr.trim().split(':').map(p => parseInt(p, 10));
+  if (parts.length === 3) {
+    return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+  } else if (parts.length === 2) {
+    return (parts[0] * 60) + parts[1];
+  }
+  return 0;
 }
+
+/** Automatically scans article text and converts [mm:ss] / (mm:ss) / [hh:mm:ss] to interactive buttons */
+function convertTimestampsToButtonsInContainer(container) {
+  if (!container) return;
+
+  const walker = document.createTreeWalker(
+    container,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
+
+  const textNodes = [];
+  let node;
+  while ((node = walker.nextNode())) {
+    const parentTag = node.parentElement ? node.parentElement.tagName.toLowerCase() : '';
+    if (['script', 'style', 'button', 'a'].includes(parentTag)) continue;
+    if (node.nodeValue && /(?:\[|\()(\d{1,2}:)?(\d{1,2}):(\d{2})/.test(node.nodeValue)) {
+      textNodes.push(node);
+    }
+  }
+
+  const regex = /(?:\[|\()(\d{1,2}:)?(\d{1,2}):(\d{2})(?:\s*(?:min|m|sec|s))?(?:\]|\))/gi;
+
+  textNodes.forEach(textNode => {
+    const parent = textNode.parentNode;
+    if (!parent) return;
+
+    const span = document.createElement('span');
+    span.innerHTML = textNode.nodeValue.replace(regex, (match, h, m, s) => {
+      const fullTimeStr = (h ? h : '') + m + ':' + s;
+      const totalSeconds = timeStringToSeconds(fullTimeStr);
+      return `<button type="button" class="katha-timestamp-btn" data-time="${totalSeconds}" data-label="${fullTimeStr}" title="Play Katha from ${fullTimeStr} (वीडियो यहाँ से सुनें)">
+        <svg class="ts-icon" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <span class="ts-time">${fullTimeStr}</span>
+        <span class="ts-label">कथा सुनें</span>
+      </button>`;
+    });
+
+    while (span.firstChild) {
+      parent.insertBefore(span.firstChild, textNode);
+    }
+    parent.removeChild(textNode);
+  });
+}
+
+/** Seeks the top video player to exact timestamp and smoothly scrolls up */
+function seekKathaVideo(seconds, label, sourceEl) {
+  const videoWrap = document.getElementById('post-video-wrap');
+  const videoIframe = document.getElementById('post-video-iframe');
+
+  if (!videoWrap || !videoIframe || !videoIframe.src) {
+    showToast(`कथा समय: ${label} (इस पोस्ट में वीडियो उपलब्ध नहीं है)`);
+    return;
+  }
+
+  videoWrap.style.display = 'block';
+
+  // Send postMessage to YouTube Iframe
+  try {
+    videoIframe.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'seekTo',
+      args: [seconds, true]
+    }), '*');
+    videoIframe.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'playVideo',
+      args: []
+    }), '*');
+  } catch (err) {
+    console.error("YouTube seek error", err);
+  }
+
+  // Smooth scroll up to video player
+  videoWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Golden glow pulse animation
+  const card = videoWrap.querySelector('.post-video-card');
+  if (card) {
+    card.classList.remove('video-playing-highlight');
+    void card.offsetWidth;
+    card.classList.add('video-playing-highlight');
+  }
+
+  // Show floating return banner
+  showReturnToReadingBanner(label, sourceEl);
+}
+
+let currentReturnBanner = null;
+
+/** Displays floating 'Return to Reading' banner at bottom */
+function showReturnToReadingBanner(label, sourceEl) {
+  if (currentReturnBanner) {
+    currentReturnBanner.remove();
+    currentReturnBanner = null;
+  }
+
+  const banner = document.createElement('div');
+  banner.className = 'katha-return-banner';
+  banner.id = 'katha-return-banner';
+  banner.innerHTML = `
+    <div class="return-info">
+      <span class="return-pulse-dot"></span>
+      <span>Playing: <strong>${label}</strong></span>
+    </div>
+    <button type="button" class="btn-return-reading" id="btn-return-reading" title="Jump back to article">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      वापस पठन पर जाएं
+    </button>
+    <button type="button" class="btn-close-banner" id="btn-close-banner" aria-label="Dismiss">✕</button>
+  `;
+
+  document.body.appendChild(banner);
+  currentReturnBanner = banner;
+
+  banner.querySelector('#btn-return-reading')?.addEventListener('click', () => {
+    if (sourceEl) {
+      sourceEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      sourceEl.classList.remove('heading-reading-highlight');
+      void sourceEl.offsetWidth;
+      sourceEl.classList.add('heading-reading-highlight');
+      setTimeout(() => sourceEl.classList.remove('heading-reading-highlight'), 2500);
+    }
+    banner.remove();
+    currentReturnBanner = null;
+  });
+
+  banner.querySelector('#btn-close-banner')?.addEventListener('click', () => {
+    banner.remove();
+    currentReturnBanner = null;
+  });
+}
+
+// Global click delegation for all timestamp buttons
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.katha-timestamp-btn');
+  if (!btn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const seconds = parseInt(btn.dataset.time, 10);
+  const label = btn.dataset.label || '00:00';
+  const sourceEl = btn.closest('h2, h3, h4, p, li') || btn;
+
+  seekKathaVideo(seconds, label, sourceEl);
+});
 
 /* --- POST READER PAGE --- */
 function initPostPage() {
@@ -663,7 +823,7 @@ function initPostPage() {
   if (videoWrap && videoIframe) {
     const videoId = getYouTubeVideoId(post.youtube_url);
     if (videoId) {
-      videoIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+      videoIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&enablejsapi=1`;
       videoWrap.style.display = 'block';
     } else {
       videoIframe.src = '';
@@ -676,6 +836,10 @@ function initPostPage() {
   const hiEl = document.getElementById('content-hi');
   if (enEl) enEl.innerHTML = post.content || '<p>Content coming soon…</p>';
   if (hiEl) hiEl.innerHTML = post.content_hi || '<p>हिंदी सारांश जल्द आएगा…</p>';
+
+  // Automatically convert any [mm:ss] or (mm:ss) timestamps into interactive play buttons
+  if (enEl) convertTimestampsToButtonsInContainer(enEl);
+  if (hiEl) convertTimestampsToButtonsInContainer(hiEl);
 
   // Generate Table of Contents (TOC) dynamically
   function generateTOC(contentEl, lang) {
@@ -696,7 +860,15 @@ function initPostPage() {
     headings.forEach((h2, idx) => {
       const id = `heading-${lang}-${idx}`;
       h2.id = id;
-      html += `<li><a href="#${id}">${h2.textContent}</a></li>`;
+
+      const tsBtn = h2.querySelector('.katha-timestamp-btn');
+      const tsBadge = tsBtn ? `<span class="toc-ts-badge">▶ ${tsBtn.dataset.label}</span>` : '';
+
+      const clone = h2.cloneNode(true);
+      clone.querySelectorAll('.katha-timestamp-btn').forEach(b => b.remove());
+      const cleanTitle = clone.textContent.trim();
+
+      html += `<li><a href="#${id}">${cleanTitle} ${tsBadge}</a></li>`;
     });
     html += `</ul>`;
     tocEl.innerHTML = html;

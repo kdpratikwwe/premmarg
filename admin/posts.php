@@ -430,9 +430,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <label class="form-label fw-semibold">Content (English)</label>
             <textarea name="content" id="content_en" class="form-control"><?= htmlspecialchars($post['content']) ?></textarea>
         </div>
-        <div class="mb-4">
+        <div class="mb-3">
             <label class="form-label fw-semibold">Content (Hindi)</label>
             <textarea name="content_hi" id="content_hi" class="form-control"><?= htmlspecialchars($post['content_hi']) ?></textarea>
+            <div class="form-text text-muted mt-2">
+                <i class="fas fa-magic text-warning me-1"></i> <strong>Automatic Katha Video Buttons:</strong> Type timestamps anywhere in headings or paragraphs (e.g., <code>[03:15]</code>, <code>[14:30]</code>, or <code>(1:05:40)</code>). On the live blog, they automatically turn into clickable golden buttons that jump the video directly to that exact moment!
+            </div>
         </div>
         <div class="row mb-4 align-items-center">
             <div class="col-md-6 mb-3 mb-md-0 form-check form-switch ps-5">
