@@ -125,13 +125,15 @@ function buildSaptahCard(saptah) {
     return `<span class="day-dot ${hasPosts ? 'filled' : ''}" title="Day ${d.day_number}">${d.day_number}</span>`;
   }).join('');
 
+  const cleanSlug = saptah.slug ? encodeURIComponent(saptah.slug.trim()) : saptah.id;
+
   return `
-    <a href="katha.html?slug=${saptah.slug}" class="glass-card glass-card-link">
+    <a href="katha.html?slug=${cleanSlug}" class="glass-card glass-card-link">
       <div class="saptah-card">
-        <div class="saptah-year-tag">📍 ${saptah.location} &nbsp;·&nbsp; ${saptah.year}</div>
-        <h3 class="saptah-card-title">${saptah.title}</h3>
-        <p class="saptah-card-location font-hindi">${saptah.title_hi}</p>
-        <p class="saptah-card-desc">${saptah.description}</p>
+        <div class="saptah-year-tag">📍 ${escapeHtml(saptah.location)} &nbsp;·&nbsp; ${saptah.year}</div>
+        <h3 class="saptah-card-title">${escapeHtml(saptah.title)}</h3>
+        <p class="saptah-card-location font-hindi">${escapeHtml(saptah.title_hi)}</p>
+        <p class="saptah-card-desc">${escapeHtml(saptah.description || '')}</p>
         <div class="saptah-card-footer">
           <div class="day-dots">${dots}</div>
           <span class="btn-ghost">Read Kathā <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
@@ -406,8 +408,9 @@ function renderHeroLatestSaptah() {
   const isPreview = urlParams.get('preview') === '1';
   const previewParam = isPreview ? '&preview=1' : '';
 
+  const cleanSlug = saptah.slug ? encodeURIComponent(saptah.slug.trim()) : saptah.id;
   const link = wrap.querySelector('.strip-saptah-link');
-  if (link) link.href = `katha.html?slug=${saptah.slug}${previewParam}`;
+  if (link) link.href = `katha.html?slug=${cleanSlug}${previewParam}`;
 
   const daysEl = document.getElementById('strip-days');
   if (!daysEl) return;
@@ -513,21 +516,30 @@ function initKathasPage() {
 
 /* --- KATHA (SAPTAH DETAIL) PAGE --- */
 function initKathaPage() {
-  const slug = getParam('slug');
-  if (!slug) { window.location.href = 'kathas.html'; return; }
+  const rawSlug = getParam('slug');
+  if (!rawSlug) { window.location.href = 'kathas.html'; return; }
 
-  const saptah = Data.getSaptah(slug);
-  if (!saptah) { window.location.href = 'kathas.html'; return; }
+  const saptah = Data.getSaptah(rawSlug);
+  if (!saptah) { 
+    console.warn("Katha not found for slug:", rawSlug);
+    window.location.href = 'kathas.html'; 
+    return; 
+  }
 
   // Meta
   document.title = `${saptah.title} – Premmarg`;
 
   // Header
-  document.getElementById('katha-title').textContent    = saptah.title;
-  document.getElementById('katha-title-hi').textContent = saptah.title_hi;
-  document.getElementById('katha-location').textContent = saptah.location;
-  document.getElementById('katha-year').textContent     = saptah.year;
-  document.getElementById('katha-desc').textContent     = saptah.description;
+  const titleEl = document.getElementById('katha-title');
+  if (titleEl) titleEl.textContent = saptah.title;
+  const titleHiEl = document.getElementById('katha-title-hi');
+  if (titleHiEl) titleHiEl.textContent = saptah.title_hi || '';
+  const locEl = document.getElementById('katha-location');
+  if (locEl) locEl.textContent = saptah.location || '';
+  const yrEl = document.getElementById('katha-year');
+  if (yrEl) yrEl.textContent = saptah.year || '';
+  const descEl = document.getElementById('katha-desc');
+  if (descEl) descEl.textContent = saptah.description || '';
 
   // Breadcrumbs & tags
   const bcTitle = document.getElementById('katha-breadcrumb-title');
@@ -558,23 +570,33 @@ function initKathaPage() {
     // Filter out timeline days that do not have active posts (drafts are only in DB if preview=1)
     const visibleDays = days.filter(d => Data.getPostsForDay(d.id).length > 0);
     
-    tlWrap.innerHTML = visibleDays.map(d => {
-      const posts = Data.getPostsForDay(d.id);
-      const href  = `post.html?slug=${posts[0].slug}${previewParam}`;
-      return `
-        <a href="${href}" class="timeline-item active reveal">
-          <div class="timeline-num">
-            <span class="timeline-num-n">${d.day_number}</span>
-            <span class="timeline-num-l">Day</span>
-          </div>
-          <div class="timeline-info">
-            <div class="t-title">${d.title}</div>
-            <div class="t-count font-hindi">${d.title_hi} · ${posts.length} post${posts.length !== 1 ? 's' : ''}</div>
-          </div>
-          <svg class="timeline-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>`;
-    }).join('');
-    initScrollReveal();
+    if (visibleDays.length === 0) {
+      tlWrap.innerHTML = `
+        <div class="glass-card text-center" style="padding:2.5rem;border-radius:var(--radius-md);">
+          <div style="font-size:2.2rem;margin-bottom:0.8rem;">🪷</div>
+          <h3 style="font-family:var(--font-heading);font-size:1.2rem;color:var(--saffron-light);margin-bottom:0.5rem;">Summaries Coming Soon</h3>
+          <p style="font-size:0.92rem;color:var(--text-muted);margin:0;line-height:1.6;">The divine summaries for this Katha are currently being prepared. Jai Shri Krishna 🙏</p>
+        </div>`;
+    } else {
+      tlWrap.innerHTML = visibleDays.map(d => {
+        const posts = Data.getPostsForDay(d.id);
+        const postSlug = posts[0] && posts[0].slug ? encodeURIComponent(posts[0].slug.trim()) : (posts[0] ? posts[0].id : '');
+        const href = `post.html?slug=${postSlug}${previewParam}`;
+        return `
+          <a href="${href}" class="timeline-item active reveal">
+            <div class="timeline-num">
+              <span class="timeline-num-n">${d.day_number}</span>
+              <span class="timeline-num-l">Day</span>
+            </div>
+            <div class="timeline-info">
+              <div class="t-title">${escapeHtml(d.title)}</div>
+              <div class="t-count font-hindi">${escapeHtml(d.title_hi || '')} · ${posts.length} post${posts.length !== 1 ? 's' : ''}</div>
+            </div>
+            <svg class="timeline-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>`;
+      }).join('');
+      initScrollReveal();
+    }
   }
 
   // Sidebar posts
@@ -584,10 +606,11 @@ function initKathaPage() {
     if (posts.length) {
       sideWrap.innerHTML = posts.slice(0, 5).map(p => {
         const day = Data.getDayForPost(p);
+        const pSlug = p.slug ? encodeURIComponent(p.slug.trim()) : p.id;
         return `
-          <a href="post.html?slug=${p.slug}" style="text-decoration:none;color:inherit;display:block;padding:0.9rem 0;border-bottom:1px solid rgba(212,135,42,0.08);">
+          <a href="post.html?slug=${pSlug}${previewParam}" style="text-decoration:none;color:inherit;display:block;padding:0.9rem 0;border-bottom:1px solid rgba(212,135,42,0.08);">
             <div style="font-size:0.7rem;color:var(--saffron);margin-bottom:0.3rem;">Day ${day?.day_number || ''}</div>
-            <div style="font-family:var(--font-heading);font-size:0.92rem;color:var(--text-primary);line-height:1.35;">${p.title}</div>
+            <div style="font-family:var(--font-heading);font-size:0.92rem;color:var(--text-primary);line-height:1.35;">${escapeHtml(p.title)}</div>
           </a>`;
       }).join('');
     } else {
@@ -1412,9 +1435,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Populate footer saptahs if element exists
   const footerUl = document.getElementById('footer-saptahs');
   if (footerUl) {
-    footerUl.innerHTML = Data.getSaptahs().slice(0,4).map(s =>
-      `<li><a href="katha.html?slug=${s.slug}">${s.title} ${s.year}</a></li>`
-    ).join('');
+    footerUl.innerHTML = Data.getSaptahs().slice(0,4).map(s => {
+      const sSlug = s.slug ? encodeURIComponent(s.slug.trim()) : s.id;
+      return `<li><a href="katha.html?slug=${sSlug}">${escapeHtml(s.title)} ${s.year}</a></li>`;
+    }).join('');
   }
 
   const body = document.body.dataset.page;

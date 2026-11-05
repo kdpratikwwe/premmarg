@@ -202,18 +202,7 @@
 </footer>
 
 <div id="toast"></div>
-<script src="js/data.js"></script>
-<script src="js/app.js?v=2.5"></script>
-<script>
-  // Populate footer saptahs
-  document.addEventListener('DOMContentLoaded', () => {
-    const ul = document.getElementById('footer-saptahs');
-    if (ul) {
-      ul.innerHTML = Data.getSaptahs().slice(0,4).map(s =>
-        `<li><a href="katha.html?slug=${s.slug}">${s.title} ${s.year}</a></li>`
-      ).join('');
-    }
-  });
-</script>
+<script src="js/data.js?v=2.6"></script>
+<script src="js/app.js?v=2.6"></script>
 </body>
 </html>

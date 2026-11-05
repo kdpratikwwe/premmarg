@@ -33,12 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $event_location = !empty($_POST['event_location']) ? trim($_POST['event_location']) : null;
     $youtube_url = !empty($_POST['youtube_url']) ? trim($_POST['youtube_url']) : null;
 
-    $title = $_POST['title'];
-    $title_hi = $_POST['title_hi'];
-    $slug = $_POST['slug'];
-    $content = $_POST['content'];
-    $content_hi = $_POST['content_hi'];
-    $meta_description = $_POST['meta_description'];
+    $title = trim($_POST['title'] ?? '');
+    $title_hi = trim($_POST['title_hi'] ?? '');
+    $slug = trim($_POST['slug'] ?? '');
+    $content = $_POST['content'] ?? '';
+    $content_hi = $_POST['content_hi'] ?? '';
+    $meta_description = trim($_POST['meta_description'] ?? '');
     $featured = isset($_POST['featured']) ? 1 : 0;
     $status = $_POST['status'] ?? 'draft';
 

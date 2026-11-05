@@ -5,18 +5,18 @@ $action = $_GET['action'] ?? 'list';
 $id = $_GET['id'] ?? 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $_POST['title'];
-    $title_hi = $_POST['title_hi'];
+    $title = trim($_POST['title'] ?? '');
+    $title_hi = trim($_POST['title_hi'] ?? '');
     $katha_type = $_POST['katha_type'] ?? 'saptah';
     $total_days = (int)($_POST['total_days'] ?? 7);
     if ($katha_type === 'saptah') $total_days = 7;
     elseif ($katha_type === 'tridivasiya') $total_days = 3;
 
-    $slug = $_POST['slug'];
-    $location = $_POST['location'];
-    $year = $_POST['year'];
-    $description = $_POST['description'];
-    $description_hi = $_POST['description_hi'];
+    $slug = trim($_POST['slug'] ?? '');
+    $location = trim($_POST['location'] ?? '');
+    $year = (int)($_POST['year'] ?? date('Y'));
+    $description = trim($_POST['description'] ?? '');
+    $description_hi = trim($_POST['description_hi'] ?? '');
 
     if ($id) {
         $stmt = $pdo->prepare('UPDATE saptah SET title=?, title_hi=?, katha_type=?, total_days=?, slug=?, location=?, year=?, description=?, description_hi=? WHERE id=?');

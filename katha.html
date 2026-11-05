@@ -130,23 +130,7 @@
 </footer>
 
 <div id="toast"></div>
-<script src="js/data.js"></script>
-<script src="js/app.js?v=2.5"></script>
-<script>
-  // Update breadcrumb and tags after page init
-  document.addEventListener('DOMContentLoaded', () => {
-    const slug = new URLSearchParams(window.location.search).get('slug');
-    if (!slug) return;
-    const s = Data.getSaptah(slug);
-    if (!s) return;
-    const bcTitle = document.getElementById('katha-breadcrumb-title');
-    if (bcTitle) bcTitle.textContent = s.title;
-    const yearTag = document.getElementById('katha-year-tag');
-    if (yearTag) yearTag.textContent = s.year;
-    const locTag = document.getElementById('katha-loc-tag');
-    if (locTag) locTag.textContent = '📍 ' + s.location;
-    document.title = s.title + ' – Premmarg';
-  });
-</script>
+<script src="js/data.js?v=2.6"></script>
+<script src="js/app.js?v=2.6"></script>
 </body>
 </html>
