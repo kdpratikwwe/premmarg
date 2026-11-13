@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin Login - Premmarg</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../uploads/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../uploads/apple-touch-icon.png">
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- FontAwesome 6 -->
@@ -40,9 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-box shadow-lg rounded-3 bg-white" style="width: 360px;">
         <div class="card border-0 p-3">
             <div class="card-header border-0 text-center bg-white pt-4">
-                <a href="../index.html" class="h1 text-decoration-none fw-bold">
-                    <i class="fas fa-feather-alt text-primary me-2"></i><b>Premmarg</b>
+                <a href="../index.html" class="d-inline-block text-decoration-none mb-2">
+                    <img src="../uploads/logo.png" alt="Premmarg" style="height:48px; width:auto; filter:drop-shadow(0 0 10px rgba(212,135,42,0.4));">
                 </a>
+                <div><a href="../index.html" class="h3 text-decoration-none fw-bold text-dark"><b>Premmarg</b></a></div>
                 <p class="text-muted mt-2 mb-0">Sign in to start your admin session</p>
             </div>
             <div class="card-body">

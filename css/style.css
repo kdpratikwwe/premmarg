@@ -197,8 +197,9 @@ body {
   text-decoration: none;
 }
 .nav-logo {
-  height: 44px;
-  width: 44px;
+  height: 42px;
+  width: auto;
+  max-width: 68px;
   object-fit: contain;
   filter: drop-shadow(0 0 10px rgba(212,135,42,0.5));
   transition: var(--transition-fast);
@@ -1771,6 +1772,9 @@ footer {
 }
 .footer-brand-logo {
   height: 48px;
+  width: auto;
+  max-width: 80px;
+  object-fit: contain;
   margin-bottom: 1rem;
   filter: drop-shadow(0 0 8px rgba(212,135,42,0.3));
 }
@@ -2066,6 +2070,7 @@ footer {
   .post-reader-wrap { padding: 140px 1.4rem 60px; }
   .about-hero { padding: 140px 1.4rem 50px; }
   .navbar { padding: 0 1.2rem; }
+  .nav-logo { height: 36px; max-width: 58px; }
   .about-stats { grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
   .toolbar { flex-direction: column; align-items: stretch; }
   .search-wrap { max-width: 100%; }

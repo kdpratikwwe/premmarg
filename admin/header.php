@@ -19,6 +19,8 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Premmarg Admin</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../uploads/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../uploads/apple-touch-icon.png">
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- FontAwesome 6 Icons -->
@@ -101,8 +103,8 @@ try {
         <!-- Sidebar -->
         <aside class="app-sidebar bg-dark shadow" data-bs-theme="dark">
             <div class="sidebar-brand">
-                <a href="index.php" class="brand-link">
-                    <i class="fas fa-feather-alt me-2"></i>
+                <a href="index.php" class="brand-link d-flex align-items-center">
+                    <img src="../uploads/logo.png" alt="Premmarg" style="height:28px; width:auto; margin-right:10px; filter:drop-shadow(0 0 6px rgba(212,135,42,0.6));">
                     <span class="brand-text">Premmarg Admin</span>
                 </a>
             </div>
