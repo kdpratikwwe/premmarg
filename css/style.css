@@ -205,6 +205,13 @@ body {
   transition: var(--transition-fast);
 }
 .nav-brand:hover .nav-logo { filter: drop-shadow(0 0 16px rgba(212,135,42,0.8)); }
+[data-theme="light"] .nav-logo {
+  background: rgba(13, 0, 8, 0.94);
+  border: 1px solid rgba(212, 135, 42, 0.4);
+  border-radius: 8px;
+  padding: 3px 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
 .nav-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
 .nav-brand-name {
   font-family: var(--font-heading);

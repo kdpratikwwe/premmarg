@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="card border-0 p-3">
             <div class="card-header border-0 text-center bg-white pt-4">
                 <a href="../index.html" class="d-inline-block text-decoration-none mb-2">
-                    <img src="../uploads/logo.png" alt="Premmarg" style="height:48px; width:auto; filter:drop-shadow(0 0 10px rgba(212,135,42,0.4));">
+                    <img src="../uploads/premmarg_logo.png?v=3.1" alt="Premmarg" style="height:48px; width:auto; filter:drop-shadow(0 0 10px rgba(212,135,42,0.4));">
                 </a>
                 <div><a href="../index.html" class="h3 text-decoration-none fw-bold text-dark"><b>Premmarg</b></a></div>
                 <p class="text-muted mt-2 mb-0">Sign in to start your admin session</p>

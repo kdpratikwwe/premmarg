@@ -104,7 +104,7 @@ try {
         <aside class="app-sidebar bg-dark shadow" data-bs-theme="dark">
             <div class="sidebar-brand">
                 <a href="index.php" class="brand-link d-flex align-items-center">
-                    <img src="../uploads/logo.png" alt="Premmarg" style="height:28px; width:auto; margin-right:10px; filter:drop-shadow(0 0 6px rgba(212,135,42,0.6));">
+                    <img src="../uploads/premmarg_logo.png?v=3.1" alt="Premmarg" style="height:28px; width:auto; margin-right:10px; filter:drop-shadow(0 0 6px rgba(212,135,42,0.6));">
                     <span class="brand-text">Premmarg Admin</span>
                 </a>
             </div>
